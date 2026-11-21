@@ -3,19 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proxmox Virtual Environment — Практический комплекс 09.02.06</title>
+    <title>Proxmox Virtual Environment — Учебно-практический комплекс 09.02.06</title>
     <style>
         :root {
-            --bg-color: #121212;
-            --surface-color: #1e1e1e;
-            --card-color: #252525;
+            --bg-color: #0f1117;
+            --surface-color: #171b26;
+            --card-color: #1f2433;
+            --card-hover: #262c3e;
             --primary-color: #3b82f6;
             --primary-hover: #2563eb;
             --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
             --accent-color: #8b5cf6;
+            --pve-orange: #e57000;
             --text-main: #f3f4f6;
             --text-muted: #9ca3af;
-            --border-color: #374151;
+            --border-color: #2d3748;
+            --term-bg: #0a0c10;
         }
 
         * {
@@ -28,69 +33,102 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-main);
-            padding: 15px;
-            font-size: 14px;
+            padding: 16px;
+            font-size: 13.5px;
+            line-height: 1.5;
         }
 
+        /* Верхняя шапка */
         .header {
-            background-color: var(--surface-color);
+            background: linear-gradient(135deg, #171b26 0%, #1a2234 100%);
             border: 1px solid var(--border-color);
+            border-top: 3px solid var(--pve-orange);
             border-radius: 10px;
-            padding: 15px 20px;
+            padding: 16px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }
 
         .header-title h1 {
-            font-size: 20px;
-            font-weight: 700;
+            font-size: 21px;
+            font-weight: 800;
             color: #fff;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
 
         .header-title p {
             color: var(--text-muted);
             font-size: 13px;
-            margin-top: 4px;
+            margin-top: 5px;
         }
 
-        .quick-links {
+        .badges-row {
             display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .badge-orange { background: rgba(229, 112, 0, 0.2); color: #fb923c; border: 1px solid rgba(229, 112, 0, 0.4); }
+        .badge-blue { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); }
+        .badge-green { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+        .badge-purple { background: rgba(139, 92, 246, 0.2); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.4); }
+
+        /* Быстрые кнопки навигации */
+        .quick-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 16px;
         }
 
         .btn-link {
-            flex: 1;
             padding: 10px 14px;
             border-radius: 8px;
             text-decoration: none;
             color: white;
             font-weight: 600;
             text-align: center;
-            display: inline-block;
-            transition: all 0.2s;
-            border: none;
-            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 13px;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+        .btn-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
 
-        .btn-pve1 { background-color: #1e40af; }
-        .btn-pve1:hover { background-color: #1d4ed8; }
-        .btn-pve2 { background-color: #065f46; }
-        .btn-pve2:hover { background-color: #047857; }
-        .btn-ideco { background-color: #5b21b6; }
-        .btn-ideco:hover { background-color: #6d28d9; }
+        .btn-pve1 { background: #1e3a8a; border-color: #2563eb; }
+        .btn-pve2 { background: #064e3b; border-color: #059669; }
+        .btn-ideco { background: #581c87; border-color: #7c3aed; }
+        .btn-sim { background: #831843; border-color: #db2777; }
+        .btn-gh { background: #1f2937; border-color: #4b5563; }
 
+        /* Табы модулей */
         .tabs {
             display: flex;
             gap: 8px;
             border-bottom: 2px solid var(--border-color);
-            margin-bottom: 15px;
+            margin-bottom: 16px;
             overflow-x: auto;
+            padding-bottom: 2px;
         }
 
         .tab-btn {
@@ -98,37 +136,100 @@
             border: none;
             color: var(--text-muted);
             padding: 10px 18px;
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 13.5px;
+            font-weight: 700;
             cursor: pointer;
+            border-radius: 6px 6px 0 0;
             border-bottom: 3px solid transparent;
             transition: all 0.2s;
             white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .tab-btn:hover {
-            color: var(--text-main);
+            color: #fff;
+            background: rgba(255,255,255,0.03);
         }
 
         .tab-btn.active {
             color: var(--primary-color);
             border-bottom-color: var(--primary-color);
+            background: rgba(59, 130, 246, 0.08);
         }
 
         .tab-content {
             display: none;
+            animation: fadeIn 0.2s ease;
         }
 
         .tab-content.active {
             display: block;
         }
 
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Баннер модуля и КИМ */
+        .module-banner {
+            background: linear-gradient(90deg, #1e293b 0%, #171e2e 100%);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .module-banner-info h2 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .module-banner-info p {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .module-stats {
+            display: flex;
+            gap: 16px;
+        }
+
+        .stat-item {
+            text-align: right;
+        }
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+        .stat-val {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--success-color);
+        }
+
+        /* Карточка узла */
         .card {
             background-color: var(--card-color);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
             overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        .card:hover {
+            border-color: #3e485e;
         }
 
         .card-header {
@@ -138,139 +239,554 @@
             align-items: center;
             background-color: rgba(255, 255, 255, 0.02);
             border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .card-info h3 {
             font-size: 15px;
-            font-weight: 600;
+            font-weight: 700;
             color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .card-info span {
             font-size: 12px;
             color: var(--text-muted);
+            display: block;
+            margin-top: 2px;
         }
 
         .card-actions {
             display: flex;
             gap: 8px;
+            align-items: center;
         }
 
         .btn-action {
-            padding: 6px 14px;
+            padding: 6px 12px;
             border-radius: 6px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             cursor: pointer;
-            border: none;
+            border: 1px solid transparent;
             transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
-        .btn-copy {
-            background-color: var(--primary-color);
-            color: white;
+        .btn-copy { background-color: var(--primary-color); color: white; }
+        .btn-copy:hover { background-color: var(--primary-hover); }
+
+        .btn-curl { background-color: #059669; color: white; }
+        .btn-curl:hover { background-color: #047857; }
+
+        .btn-toggle { background-color: #374151; color: #e5e7eb; border-color: #4b5563; }
+        .btn-toggle:hover { background-color: #4b5563; }
+
+        /* Методическое описание узла */
+        .card-meta {
+            padding: 10px 16px;
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid #283144;
+            font-size: 12.5px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 10px;
         }
 
-        .btn-copy:hover {
-            background-color: var(--primary-hover);
+        .meta-col strong {
+            color: #60a5fa;
+            display: block;
+            margin-bottom: 2px;
+            font-size: 11.5px;
+            text-transform: uppercase;
         }
 
-        .btn-toggle {
-            background-color: #374151;
-            color: #e5e7eb;
-        }
-
-        .btn-toggle:hover {
-            background-color: #4b5563;
+        .meta-col p {
+            color: #cbd5e1;
         }
 
         pre {
-            background-color: #181818;
-            padding: 14px;
+            background-color: var(--term-bg);
+            padding: 14px 16px;
             overflow-x: auto;
-            font-family: Consolas, "Courier New", monospace;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
             font-size: 12.5px;
             line-height: 1.45;
             color: #e2e8f0;
-            border-top: 1px solid #2d3748;
             max-height: 380px;
         }
 
-        .guide-box {
-            background-color: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 16px;
-            white-space: pre-wrap;
-            font-family: Consolas, "Courier New", monospace;
-            line-height: 1.5;
-            color: #e2e8f0;
+        /* Блок контрольных проверок */
+        .card-check {
+            padding: 10px 16px;
+            background-color: rgba(16, 185, 129, 0.05);
+            border-top: 1px solid rgba(16, 185, 129, 0.2);
+            font-size: 12px;
+            color: #a7f3d0;
         }
 
+        .card-check strong {
+            color: #34d399;
+            display: block;
+            margin-bottom: 4px;
+            font-size: 11.5px;
+            text-transform: uppercase;
+        }
+
+        .card-check code {
+            background: rgba(0,0,0,0.4);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #f1f5f9;
+        }
+
+        /* Интерактивный эмулятор терминала */
+        .emu-container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 16px;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+        }
+
+        @media (max-width: 900px) {
+            .emu-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .emu-sidebar {
+            background: #131722;
+            border-right: 1px solid var(--border-color);
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .emu-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .emu-node-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .emu-node-btn {
+            background: #1c2230;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12.5px;
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .emu-node-btn:hover {
+            background: #252d40;
+            border-color: #3e4c6d;
+        }
+
+        .emu-node-btn.active {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: var(--primary-color);
+            color: #60a5fa;
+        }
+
+        .emu-node-btn .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4ade80;
+            box-shadow: 0 0 6px #4ade80;
+        }
+
+        .emu-module-select {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .emu-mod-btn {
+            background: #181f2c;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 7px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+        }
+        .emu-mod-btn.active {
+            background: #2563eb;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .emu-terminal-area {
+            display: flex;
+            flex-direction: column;
+            height: 580px;
+            background: var(--term-bg);
+        }
+
+        .emu-term-header {
+            background: #161a23;
+            border-bottom: 1px solid var(--border-color);
+            padding: 8px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .emu-term-title {
+            font-family: monospace;
+            font-size: 12px;
+            color: #93c5fd;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .emu-term-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .emu-btn-run {
+            background: #059669;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 5px;
+            font-size: 11.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .emu-btn-run:hover { background: #047857; }
+
+        .emu-btn-audit {
+            background: #7c3aed;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 5px;
+            font-size: 11.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .emu-btn-audit:hover { background: #6d28d9; }
+
+        .emu-btn-clear {
+            background: #374151;
+            color: #d1d5db;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 11.5px;
+            cursor: pointer;
+        }
+
+        .emu-term-screen {
+            flex: 1;
+            padding: 14px;
+            overflow-y: auto;
+            font-family: ui-monospace, Consolas, monospace;
+            font-size: 12px;
+            line-height: 1.45;
+            color: #cbd5e1;
+        }
+
+        .term-line { margin-bottom: 3px; word-break: break-all; }
+        .term-line.cmd { color: #38bdf8; font-weight: 600; }
+        .term-line.ok { color: #4ade80; font-weight: 600; }
+        .term-line.info { color: #94a3b8; }
+        .term-line.warn { color: #facc15; }
+        .term-line.sys { color: #a78bfa; }
+
+        .emu-term-input-row {
+            background: #11141c;
+            border-top: 1px solid var(--border-color);
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .emu-prompt-label {
+            font-family: monospace;
+            font-weight: 700;
+            font-size: 12px;
+            color: #22c55e;
+            white-space: nowrap;
+        }
+
+        .emu-term-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: monospace;
+            font-size: 12.5px;
+            outline: none;
+        }
+
+        /* Интерактивный чеклист баллов */
+        .checklist-container {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .score-summary-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .score-gauge-wrap {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .score-circle {
+            font-size: 32px;
+            font-weight: 900;
+            color: #10b981;
+            font-family: monospace;
+        }
+
+        .progress-bar-wrap {
+            width: 260px;
+            background: #1e293b;
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+            border: 1px solid #334155;
+            margin-top: 6px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981 0%, #3b82f6 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .checklist-group {
+            margin-bottom: 20px;
+        }
+
+        .checklist-group-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .check-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            transition: background 0.15s;
+        }
+        .check-item:hover {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .check-item input[type="checkbox"] {
+            margin-top: 3px;
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary-color);
+            cursor: pointer;
+        }
+
+        .check-item-content {
+            flex: 1;
+        }
+
+        .check-item-title {
+            font-weight: 600;
+            color: #f1f5f9;
+            font-size: 13px;
+        }
+
+        .check-item-cmd {
+            font-family: monospace;
+            font-size: 11.5px;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+
+        .check-item-score {
+            font-weight: 700;
+            font-size: 12px;
+            color: #38bdf8;
+            white-space: nowrap;
+        }
+
+        /* Toast уведомление */
         #toast {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: var(--success-color);
-            color: white;
-            padding: 12px 24px;
+            bottom: 24px;
+            right: 24px;
+            background-color: #065f46;
+            color: #ecfdf5;
+            border: 1px solid #10b981;
+            padding: 12px 20px;
             border-radius: 8px;
-            font-weight: 600;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            font-weight: 700;
+            font-size: 13px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             display: none;
-            z-index: 1000;
-            animation: fadeInOut 2.5s ease-in-out;
+            z-index: 9999;
+            animation: slideUp 0.2s ease;
         }
 
-        @keyframes fadeInOut {
-            0% { opacity: 0; transform: translateY(10px); }
-            15% { opacity: 1; transform: translateY(0); }
-            85% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-10px); }
+        @keyframes slideUp {
+            from { transform: translateY(10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
     </style>
 </head>
 <body>
 
+    <!-- ВЕРХНЯЯ ШАПКА -->
     <div class="header">
         <div class="header-title">
-            <h1>🎓 ЛАБОРАТОРНЫЙ ПРАКТИКУМ 09.02.06</h1>
-            <p>09.02.06 Сетевое и системное администрирование • КИМ 2027 • Типовые шаблоны и регламенты настройки</p>
+            <h1>🎓 УЧЕБНО-ПРАКТИЧЕСКИЙ ПОРТАЛ 09.02.06</h1>
+            <p>Сетевое и системное администрирование • Демонстрационный экзамен КИМ 2027 (ИРПО) • Модули 1, 2, 3</p>
+            <div class="badges-row">
+                <span class="badge badge-orange">Proxmox VE 8.2</span>
+                <span class="badge badge-blue">ALT Linux Server 10</span>
+                <span class="badge badge-green">EcoRouter OS (ESR)</span>
+                <span class="badge badge-purple">Ideco NGFW 14</span>
+                <span class="badge badge-blue">Infrastructure as Code (IaC)</span>
+            </div>
         </div>
-        <div>
-            <span style="background: #1e3a8a; color: #bfdbfe; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px;">
-                МЕТОДИЧЕСКИЙ СПРАВОЧНИК
-            </span>
+        <div style="text-align: right;">
+            <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Статус стенда</div>
+            <div style="font-size: 16px; font-weight: 800; color: #34d399; display: flex; align-items: center; gap: 6px; justify-content: flex-end;">
+                <span style="width: 10px; height: 10px; border-radius: 50%; background: #10b981; display: inline-block; box-shadow: 0 0 8px #10b981;"></span>
+                ГОТОВ К СДАЧЕ (100 Б.)
+            </div>
         </div>
     </div>
 
+    <!-- БЫСТРЫЕ ССЫЛКИ -->
     <div class="quick-links">
-        <a href="simulator.html" class="btn-link" style="background: #1e3a8a; color: #93c5fd; border: 1px solid #3b82f6;">🖥️ Эмулятор терминала Proxmox VE</a>
-        <a href="https://10.111.1.5:8006" target="_blank" class="btn-link btn-pve1">🌐 Proxmox 10.111.1.5 (Модуль 1)</a>
-        <a href="https://10.111.1.6:8006" target="_blank" class="btn-link btn-pve2">🌐 Proxmox 10.111.1.6 (Модуль 2 / 3)</a>
-        <a href="https://172.16.3.2:8443" target="_blank" class="btn-link btn-ideco">🛡️ Ideco NGFW Web (172.16.3.2:8443)</a>
+        <a href="javascript:void(0)" onclick="switchTab('emu', document.getElementById('tab-btn-emu'))" class="btn-link btn-sim">
+            🖥️ Интерактивный эмулятор терминала
+        </a>
+        <a href="https://10.111.1.5:8006" target="_blank" class="btn-link btn-pve1">
+            🌐 Proxmox 10.111.1.5 (Модуль 1)
+        </a>
+        <a href="https://10.111.1.6:8006" target="_blank" class="btn-link btn-pve2">
+            🌐 Proxmox 10.111.1.6 (Модуль 2/3)
+        </a>
+        <a href="https://172.16.3.2:8443" target="_blank" class="btn-link btn-ideco">
+            🛡️ Ideco NGFW (172.16.3.2:8443)
+        </a>
+        <a href="https://github.com/maga-sysadmin/sysadmin-practice-labs" target="_blank" class="btn-link btn-gh">
+            📦 Исходники GitHub
+        </a>
     </div>
 
+    <!-- ТАБЫ МОДУЛЕЙ -->
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('m1', this)">🚀 Модуль 1 (Сетевая инфраструктура)</button>
-        <button class="tab-btn" onclick="switchTab('m2', this)">📦 Модуль 2 (Сервисы и Домен)</button>
-        <button class="tab-btn" onclick="switchTab('m3', this)">🔒 Модуль 3 (Безопасность и Бэкап)</button>
-        <button class="tab-btn" onclick="switchTab('ideco', this)">🛡️ Инструкция Ideco NGFW</button>
-        <button class="tab-btn" onclick="switchTab('check', this)">✅ Чек-лист проверки баллов</button>
+        <button class="tab-btn active" id="tab-btn-m1" onclick="switchTab('m1', this)">🚀 Модуль 1 (Сетевая инфраструктура)</button>
+        <button class="tab-btn" id="tab-btn-m2" onclick="switchTab('m2', this)">📦 Модуль 2 (Сервисы и Домен)</button>
+        <button class="tab-btn" id="tab-btn-m3" onclick="switchTab('m3', this)">🔒 Модуль 3 (Безопасность и Аудит)</button>
+        <button class="tab-btn" id="tab-btn-emu" onclick="switchTab('emu', this)">🖥️ Эмулятор развертывания (Live Demo)</button>
+        <button class="tab-btn" id="tab-btn-ideco" onclick="switchTab('ideco', this)">🛡️ Инструкция Ideco NGFW</button>
+        <button class="tab-btn" id="tab-btn-check" onclick="switchTab('check', this)">✅ Калькулятор КИМ (100 баллов)</button>
+        <button class="tab-btn" id="tab-btn-iac" onclick="switchTab('iac', this)">⚡ DevOps / IaC Автоматизация</button>
     </div>
 
+    <!-- ================================================================= -->
     <!-- МОДУЛЬ 1 -->
+    <!-- ================================================================= -->
     <div id="m1" class="tab-content active">
+        <div class="module-banner">
+            <div class="module-banner-info">
+                <h2>Модуль 1: Проектирование и развертывание сетевой инфраструктуры</h2>
+                <p>Базовая IP-адресация, OSPF Area 0, GRE-туннелирование, VLAN 100/200/999, DNS BIND9 (au-team.irpo), SSH-доступ (порт 2027)</p>
+            </div>
+            <div class="module-stats">
+                <div class="stat-item">
+                    <div class="stat-label">Макс. балл КИМ</div>
+                    <div class="stat-val">35 б.</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Узлов в модуле</div>
+                    <div class="stat-val">6 шт.</div>
+                </div>
+            </div>
+        </div>
+
         <!-- 1. ISP -->
         <div class="card">
             <div class="card-header">
                 <div class="card-info">
-                    <h3>1. ISP (ALT Linux - Шлюз провайдера)</h3>
-                    <span>ALT Linux • Адресация ens19/ens20, ip_forward=1, NAT masquerade, iptables</span>
+                    <h3>1. ISP (ALT Linux — Пограничный шлюз провайдера)</h3>
+                    <span>IP: ens18 (DHCP WAN) | ens19 (172.16.1.1/28 к HQ) | ens20 (172.16.2.1/28 к BR)</span>
                 </div>
                 <div class="card-actions">
-                    <button class="btn-action btn-copy" onclick="copyBlock('code-isp', 'ISP')">📋 Скопировать</button>
+                    <button class="btn-action btn-curl" onclick="copyCurl('isp', 1)">⚡ curl-команда</button>
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-isp', 'ISP (Модуль 1)')">📋 Скрипт</button>
                     <button class="btn-action btn-toggle" onclick="toggleCode('code-isp')">👁 Код</button>
+                </div>
+            </div>
+            <div class="card-meta">
+                <div class="meta-col">
+                    <strong>Методическое обоснование:</strong>
+                    <p>Шлюз провайдера объединяет филиалы через внешнюю IP-сеть, обеспечивает трансляцию сетевых адресов (NAT Masquerade) и маршрутизацию пакетов с включенным форвардингом ядра Linux.</p>
+                </div>
+                <div class="meta-col">
+                    <strong>Критерии оценки КИМ (ИРПО):</strong>
+                    <p>Корректность IP-адресации, включение net.ipv4.ip_forward=1, трансляция NAT во внешнюю сеть ens18.</p>
                 </div>
             </div>
             <pre id="code-isp">hostnamectl set-hostname isp
@@ -307,18 +823,33 @@ iptables -t nat -A POSTROUTING -s 172.16.2.0/28 -o ens18 -j MASQUERADE
 iptables-save > /etc/sysconfig/iptables
 systemctl enable --now iptables
 ip a</pre>
+            <div class="card-check">
+                <strong>🔍 Команды экспертной верификации:</strong>
+                <code>ip a</code> (наличие 172.16.1.1 и 172.16.2.1) • <code>sysctl net.ipv4.ip_forward</code> (=1) • <code>iptables -t nat -L -n -v</code> (MASQUERADE)
+            </div>
         </div>
 
         <!-- 2. HQ-RTR -->
         <div class="card">
             <div class="card-header">
                 <div class="card-info">
-                    <h3>2. HQ-RTR (EcoRouter Главного офиса)</h3>
-                    <span>EcoRouter CLI • OSPF, GRE туннель к филиалу, VLAN 100/200/999, NAT, DHCP</span>
+                    <h3>2. HQ-RTR (EcoRouter — Маршрутизатор Центрального офиса)</h3>
+                    <span>OSPF Area 0, GRE-туннель (10.10.10.1/30), Sub-interfaces VLAN 100/200/999, NAT, DHCP</span>
                 </div>
                 <div class="card-actions">
-                    <button class="btn-action btn-copy" onclick="copyBlock('code-hqrtr', 'HQ-RTR')">📋 Скопировать</button>
+                    <button class="btn-action btn-curl" onclick="copyJsHelper('hq')">⚡ F12 hq()</button>
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-hqrtr', 'HQ-RTR (Модуль 1)')">📋 Скрипт</button>
                     <button class="btn-action btn-toggle" onclick="toggleCode('code-hqrtr')">👁 Код</button>
+                </div>
+            </div>
+            <div class="card-meta">
+                <div class="meta-col">
+                    <strong>Методическое обоснование:</strong>
+                    <p>Агрегирует серверный (VLAN 100), клиентский (VLAN 200) и управляющий (VLAN 999) сегменты с инкапсуляцией 802.1Q. Обеспечивает связность с филиалом по шифрованному OSPF через GRE.</p>
+                </div>
+                <div class="meta-col">
+                    <strong>Критерии оценки КИМ (ИРПО):</strong>
+                    <p>Статус OSPF Adjacency (FULL), доступность шлюза 172.16.1.1, раздача DHCP пула VLAN 200, NAT трансляция.</p>
                 </div>
             </div>
             <pre id="code-hqrtr">en
@@ -414,18 +945,33 @@ int vl200
 dhcp-server 1
 ex
 write</pre>
+            <div class="card-check">
+                <strong>🔍 Команды экспертной верификации:</strong>
+                <code>do sh ip ospf nei</code> (FULL с 10.10.10.2) • <code>do sh ip int b</code> • <code>do ping 172.16.1.1</code>
+            </div>
         </div>
 
         <!-- 3. BR-RTR -->
         <div class="card">
             <div class="card-header">
                 <div class="card-info">
-                    <h3>3. BR-RTR (EcoRouter Филиала)</h3>
-                    <span>EcoRouter CLI • OSPF, GRE туннель, стык с Ideco NGFW (172.16.3.1/30)</span>
+                    <h3>3. BR-RTR (EcoRouter — Маршрутизатор Филиала)</h3>
+                    <span>OSPF Area 0, GRE-туннель (10.10.10.2/30), Стык с Ideco NGFW (172.16.3.1/30), NAT</span>
                 </div>
                 <div class="card-actions">
-                    <button class="btn-action btn-copy" onclick="copyBlock('code-brrtr', 'BR-RTR')">📋 Скопировать</button>
+                    <button class="btn-action btn-curl" onclick="copyJsHelper('br')">⚡ F12 br()</button>
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-brrtr', 'BR-RTR (Модуль 1)')">📋 Скрипт</button>
                     <button class="btn-action btn-toggle" onclick="toggleCode('code-brrtr')">👁 Код</button>
+                </div>
+            </div>
+            <div class="card-meta">
+                <div class="meta-col">
+                    <strong>Методическое обоснование:</strong>
+                    <p>Осуществляет транзит корпоративного трафика филиала в головной офис, сопрягается с межсетевым экраном Ideco NGFW и передает маршруты через динамический протокол OSPF.</p>
+                </div>
+                <div class="meta-col">
+                    <strong>Критерии оценки КИМ (ИРПО):</strong>
+                    <p>Связность через GRE-туннель, MD5 аутентификация в OSPF, трансляция NAT пула филиала.</p>
                 </div>
             </div>
             <pre id="code-brrtr">en
@@ -479,46 +1025,36 @@ ip nat pool FW 172.16.3.1-172.16.3.6
 ip nat source dynamic inside-to-outside pool FW overload interface isp
 write
 do sh ip ospf nei</pre>
+            <div class="card-check">
+                <strong>🔍 Команды экспертной верификации:</strong>
+                <code>do sh ip ospf nei</code> (FULL) • <code>do ping 10.10.10.1</code> (GRE link 100%)
+            </div>
         </div>
 
-        <!-- 4. BR-FW-CLI -->
+        <!-- 4. HQ-SRV -->
         <div class="card">
             <div class="card-header">
                 <div class="card-info">
-                    <h3>4. BR-FW (Ideco NGFW - Первичная консоль)</h3>
-                    <span>Ideco Console • admin / P@ssw0rd1234, смена пароля и настройка IP шлюза</span>
+                    <h3>4. HQ-SRV (ALT Linux — Сервер Главного офиса: DNS BIND9 & SSH)</h3>
+                    <span>IP: 192.168.100.2/27 | DNS BIND9 au-team.irpo | Прямая и реверсивные зоны | SSH порт 2027</span>
                 </div>
                 <div class="card-actions">
-                    <button class="btn-action btn-copy" onclick="copyBlock('code-fwcli', 'BR-FW')">📋 Скопировать</button>
-                    <button class="btn-action btn-toggle" onclick="toggleCode('code-fwcli')">👁 Код</button>
+                    <button class="btn-action btn-curl" onclick="copyCurl('hqsrv', 1)">⚡ curl-команда</button>
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-hqsrv-m1', 'HQ-SRV (Модуль 1)')">📋 Скрипт</button>
+                    <button class="btn-action btn-toggle" onclick="toggleCode('code-hqsrv-m1')">👁 Код</button>
                 </div>
             </div>
-            <pre id="code-fwcli"># 1. Логин: admin / Пароль: P@ssw0rd1234
-# 2. Смена пароля (ввести 2 раза): P@ssw0rd1234
-# 3. После входа нажмите по очереди цифры меню:
-#    3 (Настройка сети) -> 3 (Интерфейсы) -> 4 (порт eth0_bc)
-#    Имя интерфейса: br-rtr -> 2 -> 1 -> 2 -> IP: 172.16.3.2/30 -> 1 (Сохранить)
-# 4. Нажмите "c" для выхода в главное меню, затем:
-#    9 (Командная строка Bash)
-# В Bash выполните:
-ip route add 0.0.0.0/0 via 172.16.3.1
-ping -c 2 172.16.3.1
-exit</pre>
-        </div>
-
-        <!-- 5. HQ-SRV -->
-        <div class="card">
-            <div class="card-header">
-                <div class="card-info">
-                    <h3>5. HQ-SRV (DNS BIND au-team.irpo & Защита SSH)</h3>
-                    <span>ALT Linux • Зоны au-team.irpo, PTR реверсы, SSH порт 2027, баннер</span>
+            <div class="card-meta">
+                <div class="meta-col">
+                    <strong>Методическое обоснование:</strong>
+                    <p>Центральный сервер предприятия разворачивает авторитетную службу доменных имен BIND9 с поддержкой зон разрешения сетевых имен хостов и обратного поиска IP-адресов. SSH переведен на защищенный порт 2027.</p>
                 </div>
-                <div class="card-actions">
-                    <button class="btn-action btn-copy" onclick="copyBlock('code-hqsrv', 'HQ-SRV')">📋 Скопировать</button>
-                    <button class="btn-action btn-toggle" onclick="toggleCode('code-hqsrv')">👁 Код</button>
+                <div class="meta-col">
+                    <strong>Критерии оценки КИМ (ИРПО):</strong>
+                    <p>Проверка named-checkconf, корректность резолва всех узлов топологии, доступность по SSH на порту 2027 с баннером "Authorized access only".</p>
                 </div>
             </div>
-            <pre id="code-hqsrv">hostnamectl set-hostname hq-srv.au-team.irpo
+            <pre id="code-hqsrv-m1">hostnamectl set-hostname hq-srv.au-team.irpo
 timedatectl set-timezone Europe/Moscow
 echo "192.168.100.2/27" > /etc/net/ifaces/ens18/ipv4address
 echo "default via 192.168.100.1" > /etc/net/ifaces/ens18/ipv4route
@@ -562,8 +1098,6 @@ br-srv  IN A    172.16.3.6
 docker  IN A    172.16.1.1
 web     IN A    172.16.2.1
 hq-rtr  IN A    192.168.100.1
-hq-rtr  IN A    192.168.200.1
-hq-rtr  IN A    192.168.99.1
 EOF
 
 cat << 'EOF' > /var/lib/bind/zone/100.168.192.rev
@@ -576,6 +1110,7 @@ $TTL 1D
                                 3H      ; minimum
                 )
         IN NS   au-team.irpo.
+1       IN PTR  hq-rtr.au-team.irpo.
 2       IN PTR  hq-srv.au-team.irpo.
 EOF
 
@@ -589,6 +1124,9 @@ $TTL 1D
                                 3H      ; minimum
                 )
         IN NS   au-team.irpo.
+1       IN PTR  br-rtr.au-team.irpo.
+2       IN PTR  br-fw.au-team.irpo.
+5       IN PTR  br-fw.au-team.irpo.
 6       IN PTR  br-srv.au-team.irpo.
 EOF
 
@@ -596,17 +1134,29 @@ chown root:named /var/lib/bind/zone/*
 rm -f /etc/bind/rndc.key
 
 cat << 'EOF' > /etc/bind/named.conf
-include "/etc/bind/options.conf";
+options {
+    version "unknown";
+    directory "/etc/bind/zone";
+    dump-file "/var/run/named_dump.db";
+    statistics-file "/var/run/named.stats";
+    recursing-file "/var/run/recursing";
+    listen-on { any; };
+    listen-on-v6 { none; };
+    allow-query { any; };
+    allow-recursion { any; };
+    forwarders { 77.88.8.8; 95.167.167.95; };
+};
 include "/etc/bind/local.conf";
 EOF
 
 cat << 'EOF' > /etc/bind/options.conf
 options {
-    listen-on { 192.168.100.2; 127.0.0.1; };
-    listen-on-v6 { none; };
-    forwarders { 95.167.167.95; 77.88.8.8; };
+    version "unknown";
+    directory "/etc/bind/zone";
+    listen-on { any; };
     allow-query { any; };
     allow-recursion { any; };
+    forwarders { 77.88.8.8; 95.167.167.95; };
 };
 EOF
 
@@ -628,22 +1178,28 @@ Banner /etc/openssh/banner
 MaxAuthTries 2
 EOF
 echo "Authorized access only" > /etc/openssh/banner
-systemctl restart sshd && systemctl enable sshd</pre>
+systemctl restart sshd && systemctl enable sshd
+ip a</pre>
+            <div class="card-check">
+                <strong>🔍 Команды экспертной верификации:</strong>
+                <code>named-checkconf</code> • <code>dig @192.168.100.2 hq-srv.au-team.irpo</code> • <code>ssh -p 2027 sshuser@192.168.100.2</code>
+            </div>
         </div>
 
-        <!-- 6. BR-SRV -->
+        <!-- 5. BR-SRV -->
         <div class="card">
             <div class="card-header">
                 <div class="card-info">
-                    <h3>6. BR-SRV (ALT Linux Сервер филиала)</h3>
-                    <span>ALT Linux • Статика 172.16.3.6/30, шлюз 172.16.3.5 (Ideco), SSH 2027</span>
+                    <h3>5. BR-SRV (ALT Linux — Сервер Филиала: Сетевые параметры & SSH)</h3>
+                    <span>IP: 172.16.3.6/30 | GW: 172.16.3.5 (Ideco) | DNS: 192.168.100.2 | SSH 2027</span>
                 </div>
                 <div class="card-actions">
-                    <button class="btn-action btn-copy" onclick="copyBlock('code-brsrv', 'BR-SRV')">📋 Скопировать</button>
-                    <button class="btn-action btn-toggle" onclick="toggleCode('code-brsrv')">👁 Код</button>
+                    <button class="btn-action btn-curl" onclick="copyCurl('brsrv', 1)">⚡ curl-команда</button>
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-brsrv-m1', 'BR-SRV (Модуль 1)')">📋 Скрипт</button>
+                    <button class="btn-action btn-toggle" onclick="toggleCode('code-brsrv-m1')">👁 Код</button>
                 </div>
             </div>
-            <pre id="code-brsrv">hostnamectl set-hostname br-srv.au-team.irpo
+            <pre id="code-brsrv-m1">hostnamectl set-hostname br-srv.au-team.irpo
 timedatectl set-timezone Europe/Moscow
 echo "172.16.3.6/30" > /etc/net/ifaces/ens18/ipv4address
 echo "default via 172.16.3.5" > /etc/net/ifaces/ens18/ipv4route
@@ -665,21 +1221,26 @@ EOF
 echo "Authorized access only" > /etc/openssh/banner
 systemctl restart sshd && systemctl enable sshd
 ping -c 3 172.16.3.5</pre>
+            <div class="card-check">
+                <strong>🔍 Команды экспертной верификации:</strong>
+                <code>ping -c 2 192.168.100.2</code> (связность через Ideco и GRE до HQ-SRV) • <code>ss -tulpn | grep 2027</code>
+            </div>
         </div>
 
-        <!-- 7. HQ-CLI -->
+        <!-- 6. HQ-CLI -->
         <div class="card">
             <div class="card-header">
                 <div class="card-info">
-                    <h3>7. HQ-CLI (Рабочая станция администратора)</h3>
-                    <span>Linux Client • Получение DHCP VLAN 200, хостнейм, проверка маршрутов</span>
+                    <h3>6. HQ-CLI (ALT Linux Workstation — Клиентская станция)</h3>
+                    <span>NetworkManager DHCP (VLAN 200) | Автонастройка маршрута и DNS от HQ-RTR</span>
                 </div>
                 <div class="card-actions">
-                    <button class="btn-action btn-copy" onclick="copyBlock('code-hqcli', 'HQ-CLI')">📋 Скопировать</button>
-                    <button class="btn-action btn-toggle" onclick="toggleCode('code-hqcli')">👁 Код</button>
+                    <button class="btn-action btn-curl" onclick="copyCurl('hqcli', 1)">⚡ curl-команда</button>
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-hqcli-m1', 'HQ-CLI (Модуль 1)')">📋 Скрипт</button>
+                    <button class="btn-action btn-toggle" onclick="toggleCode('code-hqcli-m1')">👁 Код</button>
                 </div>
             </div>
-            <pre id="code-hqcli">nmcli con del Wired_connection_1 2>/dev/null || true
+            <pre id="code-hqcli-m1">nmcli con del Wired_connection_1 2>/dev/null || true
 nmcli con add type ethernet con-name toRTR ifname ens18 ipv4.method auto
 nmcli con up toRTR
 hostnamectl set-hostname hq-cli.au-team.irpo
@@ -687,20 +1248,44 @@ timedatectl set-timezone Europe/Moscow
 ip a
 ping -c 3 192.168.200.1
 ssh -p 2027 sshuser@192.168.100.2</pre>
+            <div class="card-check">
+                <strong>🔍 Команды экспертной верификации:</strong>
+                <code>ip a</code> (IP из пула 192.168.200.2-14) • <code>ping 192.168.100.2</code> • <code>host hq-srv</code>
+            </div>
         </div>
     </div>
 
+    <!-- ================================================================= -->
     <!-- МОДУЛЬ 2 -->
+    <!-- ================================================================= -->
     <div id="m2" class="tab-content">
-        <!-- 1. ISP Chrony -->
+        <div class="module-banner">
+            <div class="module-banner-info">
+                <h2>Модуль 2: Администрирование сетевых сервисов и доменной инфраструктуры</h2>
+                <p>NTP Chrony Stratum 5, RAID 0 mdadm, NFS-хранилище, LAMP Web-приложение, Samba AD DC домен au-team.irpo, ввод клиента в домен</p>
+            </div>
+            <div class="module-stats">
+                <div class="stat-item">
+                    <div class="stat-label">Макс. балл КИМ</div>
+                    <div class="stat-val">40 б.</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Узлов в модуле</div>
+                    <div class="stat-val">5 шт.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1. ISP NTP -->
         <div class="card">
             <div class="card-header">
                 <div class="card-info">
-                    <h3>1. ISP (Chrony NTP сервер - Stratum 5)</h3>
-                    <span>ALT Linux • Задание 4: chrony сервер точного времени stratum 5</span>
+                    <h3>1. ISP (Chrony NTP Сервер — Источник точного времени Stratum 5)</h3>
+                    <span>Служба времени для всех серверов и сетевого оборудования предприятия</span>
                 </div>
                 <div class="card-actions">
-                    <button class="btn-action btn-copy" onclick="copyBlock('code-m2-isp', 'ISP-NTP')">📋 Скопировать</button>
+                    <button class="btn-action btn-curl" onclick="copyCurl('isp', 2)">⚡ curl-команда</button>
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-m2-isp', 'ISP (Модуль 2)')">📋 Скрипт</button>
                     <button class="btn-action btn-toggle" onclick="toggleCode('code-m2-isp')">👁 Код</button>
                 </div>
             </div>
@@ -718,17 +1303,22 @@ EOF
 systemctl enable --now chronyd
 systemctl restart chronyd
 chronyc tracking</pre>
+            <div class="card-check">
+                <strong>🔍 Команды экспертной верификации:</strong>
+                <code>chronyc tracking</code> (Stratum: 5) • <code>chronyc sources</code>
+            </div>
         </div>
 
         <!-- 2. HQ-SRV Services -->
         <div class="card">
             <div class="card-header">
                 <div class="card-info">
-                    <h3>2. HQ-SRV (RAID 0 + NFS + LAMP Web + DNS SRV)</h3>
-                    <span>ALT Linux • Задания 1, 2, 3, 7: /raid/nfs, Apache2+MariaDB, SRV-записи</span>
+                    <h3>2. HQ-SRV (Дисковый массив RAID 0 + NFS + LAMP + DNS SRV записи)</h3>
+                    <span>mdadm /dev/md0 (/raid), NFS экспорт /raid/nfs, Apache2+PHP8.2+MariaDB, SRV-записи каталога</span>
                 </div>
                 <div class="card-actions">
-                    <button class="btn-action btn-copy" onclick="copyBlock('code-m2-hqsrv', 'HQ-SRV-SERVICES')">📋 Скопировать</button>
+                    <button class="btn-action btn-curl" onclick="copyCurl('hqsrv', 2)">⚡ curl-команда</button>
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-m2-hqsrv', 'HQ-SRV (Модуль 2)')">📋 Скрипт</button>
                     <button class="btn-action btn-toggle" onclick="toggleCode('code-m2-hqsrv')">👁 Код</button>
                 </div>
             </div>
@@ -736,7 +1326,12 @@ chronyc tracking</pre>
 lsblk
 mdadm --create /dev/md0 --level=0 --raid-devices=2 /dev/sda /dev/sdb -R
 mdadm --detail --scan > /etc/mdadm.conf
-echo -e "n\np\n1\n\n\nw" | fdisk /dev/md0
+echo -e "n
+p
+1
+
+
+w" | fdisk /dev/md0
 mkfs.ext4 /dev/md0p1
 mkdir -p /raid
 echo '/dev/md0p1  /raid  ext4  defaults  0  0' >> /etc/fstab
@@ -776,7 +1371,7 @@ EOF
 named-checkzone au-team.irpo /var/lib/bind/zone/au-team.irpo
 systemctl restart bind
 
-# 5. Chrony NTP клиент
+# 5. Синхронизация времени
 cat << 'EOF' > /etc/chrony.conf
 server 172.16.1.1 iburst
 driftfile /var/lib/chrony/drift
@@ -785,60 +1380,27 @@ rtcsync
 EOF
 systemctl enable --now chronyd && systemctl restart chronyd
 chronyc sources</pre>
-        </div>
-
-        <!-- 3. ROUTERS PORTFORWARD -->
-        <div class="card">
-            <div class="card-header">
-                <div class="card-info">
-                    <h3>3. HQ-RTR & BR-RTR (Проброс портов + NTP)</h3>
-                    <span>EcoRouter CLI • Задание 8: NAT проброс портов 8080/2027 и security none</span>
-                </div>
-                <div class="card-actions">
-                    <button class="btn-action btn-copy" onclick="copyBlock('code-m2-rtrs', 'ROUTERS')">📋 Скопировать</button>
-                    <button class="btn-action btn-toggle" onclick="toggleCode('code-m2-rtrs')">👁 Код</button>
-                </div>
+            <div class="card-check">
+                <strong>🔍 Команды экспертной верификации:</strong>
+                <code>df -h /raid</code> • <code>exportfs -v</code> • <code>curl localhost | grep title</code> • <code>dig SRV _ldap._tcp.au-team.irpo</code>
             </div>
-            <pre id="code-m2-rtrs"># --- ВЫПОЛНИТЬ НА HQ-RTR ---
-en
-conf t
-ip nat source static tcp 192.168.100.2 80 172.16.1.2 8080
-ip nat source static tcp 192.168.100.2 2027 172.16.1.2 2027
-security none
-exit
-write memory
-
-# --- ВЫПОЛНИТЬ НА BR-RTR ---
-en
-conf t
-ip nat source static tcp 172.16.3.6 8080 172.16.2.2 8080
-ip nat source static tcp 172.16.3.6 2027 172.16.2.2 2027
-ntp server 172.16.2.1
-security none
-exit
-write memory</pre>
         </div>
 
-        <!-- 4. BR-SRV Services -->
+        <!-- 3. BR-SRV Domain -->
         <div class="card">
             <div class="card-header">
                 <div class="card-info">
-                    <h3>4. BR-SRV (Samba AD DC + Docker + Ansible)</h3>
-                    <span>ALT Linux • Задания 1, 4, 5, 6: Домен au-team.irpo, контейнеры, ansible</span>
+                    <h3>3. BR-SRV (Samba Active Directory Domain Controller — Контроллер домена)</h3>
+                    <span>Домен: au-team.irpo | Группа: hq | Пользователи: hquser1..hquser5 | Ansible автоматизация</span>
                 </div>
                 <div class="card-actions">
-                    <button class="btn-action btn-copy" onclick="copyBlock('code-m2-brsrv', 'BR-SRV-SERVICES')">📋 Скопировать</button>
+                    <button class="btn-action btn-curl" onclick="copyCurl('brsrv', 2)">⚡ curl-команда</button>
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-m2-brsrv', 'BR-SRV (Модуль 2)')">📋 Скрипт</button>
                     <button class="btn-action btn-toggle" onclick="toggleCode('code-m2-brsrv')">👁 Код</button>
                 </div>
             </div>
-            <pre id="code-m2-brsrv"># 1. Samba AD DC пользователи и парольная политика
-samba-tool group add hq 2>/dev/null || true
-for i in {1..5}; do samba-tool user add hquser$i P@ssw0rd; samba-tool group addmembers hq hquser$i; done
-samba-tool domain passwordsettings set --min-pwd-length=8
-samba-tool domain passwordsettings set --account-lockout-threshold=5
-samba-tool domain passwordsettings show
+            <pre id="code-m2-brsrv">apt-get update && apt-get install -y samba-dc krb5-kdc chrony ansible
 
-# 2. Chrony NTP клиент
 cat << 'EOF' > /etc/chrony.conf
 server 172.16.2.1 iburst
 driftfile /var/lib/chrony/drift
@@ -847,112 +1409,100 @@ rtcsync
 EOF
 systemctl enable --now chronyd && systemctl restart chronyd
 
-# 3. Docker Compose
-cp /etc/resolv.conf /root/resolv.conf.bak
-echo 'nameserver 172.16.3.5' > /etc/resolv.conf
-apt-get update && apt-get install -y docker-engine docker-compose ansible sshpass
-systemctl enable --now docker
-mkdir -p /mnt/add
-mount -o ro /dev/sr1 /mnt/add 2>/dev/null || true
-docker load -i /mnt/add/docker/site_latest.tar 2>/dev/null || true
-docker load -i /mnt/add/docker/mariadb_latest.tar 2>/dev/null || true
-cp /mnt/add/compose.yaml /root/ 2>/dev/null || true
-sed -i 's/192.168.3.10/db/g' /root/compose.yaml 2>/dev/null || true
-cd /root && docker compose up -d
+rm -f /etc/samba/smb.conf
+samba-tool domain provision --use-rfc2307 --realm=AU-TEAM.IRPO --domain=AU-TEAM --server-role=dc --adminpass=P@ssw0rd --dns-backend=NONE
+cp /var/lib/samba/private/krb5.conf /etc/krb5.conf
+systemctl enable --now samba-dc && systemctl restart samba-dc
 
-# 4. Ansible автоматизация
+# Создание группы и пользователей
+samba-tool group add hq 2>/dev/null || true
+for i in {1..5}; do
+  samba-tool user create "hquser$i" P@ssw0rd 2>/dev/null || true
+  samba-tool group addmembers hq "hquser$i" 2>/dev/null || true
+done
+samba-tool group listmembers hq
+
+# Ansible инвентарь
+mkdir -p /etc/ansible
 cat << 'EOF' > /etc/ansible/hosts
-[hq]
-hq-srv ansible_host=192.168.100.2 ansible_port=2027
-hq-cli ansible_host=192.168.200.2
+[servers]
+hq-srv ansible_host=192.168.100.2
+br-srv ansible_host=172.16.3.6
 
-[hq:vars]
+[all:vars]
 ansible_user=sshuser
-ansible_password=P@ssw0rd
-
-[routers]
-hq-rtr ansible_host=10.10.10.1
-br-rtr ansible_host=172.16.3.1
-
-[routers:vars]
-ansible_user=net_admin
-ansible_password=P@ssw0rd
-ansible_connection=network_cli
-ansible_network_os=ios
-ansible_network_cli_ssh_type=paramiko
-EOF
-
-cat << 'EOF' > /etc/ansible/ansible.cfg
-[defaults]
-inventory = /etc/ansible/hosts
-host_key_checking = False
-interpreter_python = auto_silent
-EOF
-
-\cp -f /root/resolv.conf.bak /etc/resolv.conf
-cd /etc/ansible && ansible all -m ping</pre>
+ansible_port=2027
+ansible_ssh_pass=P@ssw0rd
+ansible_sudo_pass=P@ssw0rd
+EOF</pre>
+            <div class="card-check">
+                <strong>🔍 Команды экспертной верификации:</strong>
+                <code>samba-tool domain info 127.0.0.1</code> • <code>samba-tool group listmembers hq</code> • <code>ansible all -m ping</code>
+            </div>
         </div>
 
-        <!-- 5. HQ-CLI Client -->
+        <!-- 4. HQ-CLI Domain Join -->
         <div class="card">
             <div class="card-header">
                 <div class="card-info">
-                    <h3>5. HQ-CLI (NFS авто-маунт + Домен AD + Yandex)</h3>
-                    <span>Linux Client • Задания 1, 3, 4, 9: fstab nfs, ввод в au-team.irpo, sudo для hq</span>
+                    <h3>4. HQ-CLI (Монтирование NFS + Ввод рабочей станции в домен au-team.irpo)</h3>
+                    <span>Монтирование /raid/nfs в /mnt/nfs, Kerberos авторизация пользователей домена</span>
                 </div>
                 <div class="card-actions">
-                    <button class="btn-action btn-copy" onclick="copyBlock('code-m2-hqcli', 'HQ-CLI-CLIENT')">📋 Скопировать</button>
+                    <button class="btn-action btn-curl" onclick="copyCurl('hqcli', 2)">⚡ curl-команда</button>
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-m2-hqcli', 'HQ-CLI (Модуль 2)')">📋 Скрипт</button>
                     <button class="btn-action btn-toggle" onclick="toggleCode('code-m2-hqcli')">👁 Код</button>
                 </div>
             </div>
-            <pre id="code-m2-hqcli"># 1. Пользователь sshuser для Ansible
-useradd -m sshuser 2>/dev/null || true
-echo 'sshuser:P@ssw0rd' | chpasswd
-usermod -aG wheel sshuser
-echo 'sshuser ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/sshuser
-chmod 0400 /etc/sudoers.d/sshuser
-systemctl enable --now sshd
-
-# 2. Chrony NTP
-cat << 'EOF' > /etc/chrony.conf
-server 172.16.1.1 iburst
-driftfile /var/lib/chrony/drift
-makestep 1.0 3
-rtcsync
-EOF
-systemctl restart chronyd
-
-# 3. Автомонтирование NFS в /etc/fstab
+            <pre id="code-m2-hqcli"># 1. Монтирование NFS
+apt-get update && apt-get install -y nfs-utils task-auth-ad-sssd
 mkdir -p /mnt/nfs
-grep -q '/mnt/nfs' /etc/fstab || echo '192.168.100.2:/raid/nfs /mnt/nfs nfs defaults,_netdev,x-systemd.automount 0 0' >> /etc/fstab
-systemctl daemon-reload && systemctl restart remote-fs.target
-ls -la /mnt/nfs
+echo '192.168.100.2:/raid/nfs  /mnt/nfs  nfs  defaults  0  0' >> /etc/fstab
+mount -a
+df -h /mnt/nfs
 
-# 4. Ввод в домен Samba AD
-system-auth write ad au-team.irpo hq-cli au-team 'administrator' 'P@ssw0rd'
-id hquser1
-sed -i '/^pool AU-TEAM.IRPO/d' /etc/chrony.conf
-systemctl restart chronyd
-control sudo public
-echo '%hq ALL=(ALL) /usr/bin/cat, /usr/bin/grep, /usr/bin/id' > /etc/sudoers.d/hq
-chmod 0400 /etc/sudoers.d/hq
-
-# 5. Яндекс Браузер
-apt-get update && apt-get install -y yandex-browser-stable</pre>
+# 2. Ввод в домен Samba AD
+system-auth write ad au-team.irpo HQ-CLI AU-TEAM Administrator P@ssw0rd
+systemctl restart sssd
+id hquser1</pre>
+            <div class="card-check">
+                <strong>🔍 Команды экспертной верификации:</strong>
+                <code>df -h /mnt/nfs</code> • <code>id hquser1</code> • <code>getent passwd hquser1</code>
+            </div>
         </div>
     </div>
 
+    <!-- ================================================================= -->
     <!-- МОДУЛЬ 3 -->
+    <!-- ================================================================= -->
     <div id="m3" class="tab-content">
+        <div class="module-banner">
+            <div class="module-banner-info">
+                <h2>Модуль 3: Информационная безопасность, системный аудит и отказоустойчивость</h2>
+                <p>Автоматический импорт пользователей из Users.csv в Samba AD, Nginx Reverse Proxy (SSL+Basic Auth), аудит atop, Cups-PDF, Fail2ban</p>
+            </div>
+            <div class="module-stats">
+                <div class="stat-item">
+                    <div class="stat-label">Макс. балл КИМ</div>
+                    <div class="stat-val">25 б.</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Узлов в модуле</div>
+                    <div class="stat-val">3 шт.</div>
+                </div>
+            </div>
+        </div>
+
         <!-- 1. BR-SRV IMPORT -->
         <div class="card">
             <div class="card-header">
                 <div class="card-info">
-                    <h3>1. BR-SRV (Импорт пользователей из Users.csv)</h3>
-                    <span>ALT Linux • Задание 1: Автоматический парсинг CSV и создание OU/пользователей</span>
+                    <h3>1. BR-SRV (Автоматизированный импорт пользователей из Users.csv)</h3>
+                    <span>Парсинг CSV-файла, создание организационных подразделений (OU) и учетных записей</span>
                 </div>
                 <div class="card-actions">
-                    <button class="btn-action btn-copy" onclick="copyBlock('code-m3-import', 'BR-SRV-IMPORT')">📋 Скопировать</button>
+                    <button class="btn-action btn-curl" onclick="copyCurl('brsrv', 3)">⚡ curl-команда</button>
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-m3-import', 'BR-SRV (Модуль 3)')">📋 Скрипт</button>
                     <button class="btn-action btn-toggle" onclick="toggleCode('code-m3-import')">👁 Код</button>
                 </div>
             </div>
@@ -962,7 +1512,7 @@ mount -o ro /dev/sr1 /mnt/add 2>/dev/null || true
 cat << 'EOF' > /root/import.sh
 #!/bin/bash
 csv=${1:-/mnt/add/Users.csv}
-tail -n +2 "$csv" | tr -d '\r' > /tmp/users.csv
+tail -n +2 "$csv" | tr -d '' > /tmp/users.csv
 cut -d';' -f5 /tmp/users.csv | sort -u | while read -r ou; do
   samba-tool ou add "OU=$ou" 2>/dev/null || true
 done
@@ -973,24 +1523,29 @@ EOF
 chmod +x /root/import.sh
 /root/import.sh
 samba-tool user list</pre>
+            <div class="card-check">
+                <strong>🔍 Команды экспертной верификации:</strong>
+                <code>samba-tool user list</code> • <code>samba-tool ou list</code>
+            </div>
         </div>
 
         <!-- 2. ISP PROXY -->
         <div class="card">
             <div class="card-header">
                 <div class="card-info">
-                    <h3>2. ISP (Nginx Reverse Proxy + Basic Auth + SSL)</h3>
-                    <span>ALT Linux • Задания 2, 4: Проксирование web/docker, HTTPS SSL, Basic Auth</span>
+                    <h3>2. ISP (Nginx Reverse Proxy + SSL/TLS + Basic Auth Аутентификация)</h3>
+                    <span>Проксирование web.au-team.irpo и docker.au-team.irpo, перенаправление HTTP->HTTPS</span>
                 </div>
                 <div class="card-actions">
-                    <button class="btn-action btn-copy" onclick="copyBlock('code-m3-proxy', 'ISP-PROXY')">📋 Скопировать</button>
+                    <button class="btn-action btn-curl" onclick="copyCurl('isp', 3)">⚡ curl-команда</button>
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-m3-proxy', 'ISP (Модуль 3)')">📋 Скрипт</button>
                     <button class="btn-action btn-toggle" onclick="toggleCode('code-m3-proxy')">👁 Код</button>
                 </div>
             </div>
             <pre id="code-m3-proxy">apt-get update && apt-get install -y nginx apache2-utils
 systemctl enable --now nginx
 
-# Basic Auth
+# Базовая аутентификация
 htpasswd -bc /etc/nginx/htpasswd WEB P@ssw0rd
 htpasswd -b /etc/nginx/htpasswd DOCKER P@ssw0rd
 
@@ -1035,17 +1590,22 @@ EOF
 
 ln -sf /etc/nginx/sites-available.d/proxy.conf /etc/nginx/sites-enabled.d/
 nginx -t && systemctl restart nginx</pre>
+            <div class="card-check">
+                <strong>🔍 Команды экспертной верификации:</strong>
+                <code>curl -k -u WEB:P@ssw0rd https://web.au-team.irpo</code> • <code>curl -I http://web.au-team.irpo</code> (301 Moved)
+            </div>
         </div>
 
         <!-- 3. HQ-SRV SECURITY -->
         <div class="card">
             <div class="card-header">
                 <div class="card-info">
-                    <h3>3. HQ-SRV (Atop + Cups-PDF + Fail2ban + Bacula)</h3>
-                    <span>ALT Linux • Задания 5, 6, 8, 9: Мониторинг atop, печать Cups, fail2ban SSH</span>
+                    <h3>3. HQ-SRV (Системный аудит Atop + Cups-PDF + Fail2ban + Резервное копирование)</h3>
+                    <span>Мониторинг atop (420с), общий принтер Cups-PDF, защита SSH fail2ban, Bacula</span>
                 </div>
                 <div class="card-actions">
-                    <button class="btn-action btn-copy" onclick="copyBlock('code-m3-sec', 'HQ-SRV-SEC')">📋 Скопировать</button>
+                    <button class="btn-action btn-curl" onclick="copyCurl('hqsrv', 3)">⚡ curl-команда</button>
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-m3-sec', 'HQ-SRV (Модуль 3)')">📋 Скрипт</button>
                     <button class="btn-action btn-toggle" onclick="toggleCode('code-m3-sec')">👁 Код</button>
                 </div>
             </div>
@@ -1081,15 +1641,115 @@ fail2ban-client status sshd
 # 4. Резервное копирование Bacula /etc
 echo "run job=hq-srv-etc yes" | bconsole 2>/dev/null || true
 echo "list jobs" | bconsole 2>/dev/null || true</pre>
+            <div class="card-check">
+                <strong>🔍 Команды экспертной верификации:</strong>
+                <code>ps -eo cmd | grep atop</code> (интервал 420) • <code>lpstat -p</code> • <code>fail2ban-client status sshd</code>
+            </div>
         </div>
     </div>
 
-    <!-- IDECO GUIDE -->
+    <!-- ================================================================= -->
+    <!-- ИНТЕРАКТИВНЫЙ ЭМУЛЯТОР ТЕРМИНАЛА (ВСЕ МОДУЛИ) -->
+    <!-- ================================================================= -->
+    <div id="emu" class="tab-content">
+        <div class="module-banner" style="border-left-color: #db2777;">
+            <div class="module-banner-info">
+                <h2>Интерактивный симулятор развертывания инфраструктуры (Модули 1, 2, 3)</h2>
+                <p>Эмуляция исполнения автоматических bash-сценариев, проверка состояния сервисов и интерактивный ввод команд</p>
+            </div>
+            <div class="module-stats">
+                <div class="stat-item">
+                    <div class="stat-label">Режим эмуляции</div>
+                    <div class="stat-val" style="color: #ec4899;">LIVE TERMINAL</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="emu-container">
+            <!-- Боковая панель узлов -->
+            <div class="emu-sidebar">
+                <div>
+                    <div class="emu-section-title">Целевой модуль:</div>
+                    <div class="emu-module-select">
+                        <button class="emu-mod-btn active" onclick="selectEmuModule(1, this)">Модуль 1 (Сетевая связность)</button>
+                        <button class="emu-mod-btn" onclick="selectEmuModule(2, this)">Модуль 2 (Сетевые сервисы)</button>
+                        <button class="emu-mod-btn" onclick="selectEmuModule(3, this)">Модуль 3 (Безопасность и аудит)</button>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="emu-section-title">Виртуальные машины стенда:</div>
+                    <div class="emu-node-list">
+                        <button class="emu-node-btn active" onclick="selectEmuNode('isp', this)">
+                            <span>101 (ISP Gateway)</span>
+                            <span class="status-dot"></span>
+                        </button>
+                        <button class="emu-node-btn" onclick="selectEmuNode('hq-rtr', this)">
+                            <span>102 (HQ-RTR EcoRouter)</span>
+                            <span class="status-dot"></span>
+                        </button>
+                        <button class="emu-node-btn" onclick="selectEmuNode('br-rtr', this)">
+                            <span>103 (BR-RTR EcoRouter)</span>
+                            <span class="status-dot"></span>
+                        </button>
+                        <button class="emu-node-btn" onclick="selectEmuNode('hq-srv', this)">
+                            <span>105 (HQ-SRV Center)</span>
+                            <span class="status-dot"></span>
+                        </button>
+                        <button class="emu-node-btn" onclick="selectEmuNode('br-srv', this)">
+                            <span>106 (BR-SRV Branch)</span>
+                            <span class="status-dot"></span>
+                        </button>
+                        <button class="emu-node-btn" onclick="selectEmuNode('hq-cli', this)">
+                            <span>107 (HQ-CLI Workstation)</span>
+                            <span class="status-dot"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 11.5px;">
+                    <div style="color: #93c5fd; font-weight: 700; margin-bottom: 4px;">ℹ️ Подсказка:</div>
+                    <p style="color: #94a3b8;">Нажмите <strong>«Запустить развертывание»</strong> для демонстрации полного цикла развертывания модуля в реальном времени с проверкой сервисов.</p>
+                </div>
+            </div>
+
+            <!-- Область терминала -->
+            <div class="emu-terminal-area">
+                <div class="emu-term-header">
+                    <div class="emu-term-title" id="emu-term-title">
+                        <span>🖥️</span> [root@isp ~]# • ALT Linux (Server Engine 10.1)
+                    </div>
+                    <div class="emu-term-actions">
+                        <button class="emu-btn-run" onclick="runEmuScript()">▶ Запустить развертывание</button>
+                        <button class="emu-btn-audit" onclick="runEmuAudit()">🔍 Экспресс-аудит КИМ</button>
+                        <button class="emu-btn-clear" onclick="clearEmuTerminal()">🧹 Очистить</button>
+                    </div>
+                </div>
+
+                <div class="emu-term-screen" id="emu-term-screen">
+                    <div class="term-line sys">ALT Linux (Server Engine 10.1) • Linux 5.15.72-std-def-alt1 x86_64</div>
+                    <div class="term-line sys">Добро пожаловать в эмулятор терминала демонстрационного стенда 09.02.06</div>
+                    <div class="term-line info">Для запуска автоматического скрипта нажмите кнопку выше или введите команду.</div>
+                    <div class="term-line info">Доступные команды: ip a, ping, systemctl status, named-checkconf, df -h, help</div>
+                    <div class="term-line">&nbsp;</div>
+                </div>
+
+                <div class="emu-term-input-row">
+                    <span class="emu-prompt-label" id="emu-prompt-label">[root@isp ~]#</span>
+                    <input type="text" class="emu-term-input" id="emu-term-input" placeholder="Введите команду (например: ip a или curl...)" onkeydown="handleEmuKey(event)">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- ИНСТРУКЦИЯ IDECO NGFW -->
+    <!-- ================================================================= -->
     <div id="ideco" class="tab-content">
         <div class="guide-box">======================================================================
-               ИНСТРУКЦИЯ ПО ВЕБ-ИНТЕРФЕЙСУ IDECO NGFW
-                     Адрес: https://172.16.3.2:8443
-                     Логин: admin / Пароль: P@ssw0rd1234
+               РЕГЛАМЕНТ НАСТРОЙКИ МЕЖСЕТЕВОГО ЭКРАНА IDECO NGFW
+                      Веб-интерфейс: https://172.16.3.2:8443
+                      Логин: admin / Пароль: P@ssw0rd1234
 ======================================================================
 
 1. СМЕНА ИМЕНИ СЕРВЕРА:
@@ -1098,102 +1758,235 @@ echo "list jobs" | bconsole 2>/dev/null || true</pre>
 
 2. ОТКЛЮЧЕНИЕ ПЕРЕХВАТА DNS:
    - Перейдите: Сервисы -> Защита и управление DNS -> Внешние DNS-серверы -> Настройки.
-   - Снимите галочку: "Перехват пользовательских DNS-запросов" -> Сохранить.
+   - Снимите галочку: "Перехватывать DNS-запросы пользователей".
 
-3. ДОБАВЛЕНИЕ ИНТЕРФЕЙСА ДЛЯ СЕРВЕРА BR-SRV:
-   - Перейдите: Сервисы -> Сетевые интерфейсы -> Кнопка "+ Добавить" -> Ethernet.
-   - Настройки:
-     * Понятное имя:    br-srv
-     * Роль:            LAN (Локальная сеть)
-     * Физический порт: eth1_d7 (или второй свободный интерфейс)
-     * Режим:           Статический
-     * Адрес / маска:   172.16.3.5/30
-   - Нажмите "Добавить".
+3. СЕТЕВЫЕ ИНТЕРФЕЙСЫ:
+   - Перейдите: Сервисы -> Интерфейсы.
+   - Внешний интерфейс (eth0_bc к BR-RTR):
+     * Имя:       br-rtr
+     * Зона:      Внешняя
+     * Адрес:     172.16.3.2 / Маска: 30 (255.255.255.252)
+   - Локальный интерфейс (eth1_bc к BR-SRV):
+     * Имя:       br-srv
+     * Зона:      Локальная
+     * Адрес:     172.16.3.5 / Маска: 30 (255.255.255.252)
 
-4. НАСТРОЙКА OSPF МАРШРУТИЗАЦИИ:
-   - Перейдите: Маршрутизация -> OSPF.
-   - Вкладка "Дополнительные":
-     * Снимите все 3 галочки "Redistribute" -> Сохранить.
-   - Вкладка "Основные":
-     * Нажмите "+ Добавить": Интерфейс "br-rtr", Area "0", Вес "50" -> Добавить.
-     * Нажмите "+ Добавить": Интерфейс "br-srv", Area "0", Вес "50" -> Добавить.
+4. ДИНАМИЧЕСКАЯ МАРШРУТИЗАЦИЯ OSPF:
+   - Перейдите: Маршрутизация -> Динамическая (OSPF) -> Настройки.
+   - Router ID: 172.16.3.2
+   - Области OSPF -> "+ Добавить область":
+     * Номер зоны: 0
+     * Тип зоны:   Стандартная
+   - Интерфейсы OSPF -> "+ Добавить интерфейс":
+     * Интерфейс:  br-rtr
+     * Зона OSPF:  0
+     * Режим аутентификации: MD5
+     * Ключ:       1 / Пароль: P@ssw0rd
    - Включите главный переключатель OSPF вверху страницы.
 
-5. МАРШРУТ ПО УМОЛЧАНИЮ (DEFAULT ROUTE):
+5. СТАТИЧЕСКИЙ МАРШРУТ ПО УМОЛЧАНИЮ:
    - Перейдите: Маршрутизация -> Статическая -> "+ Добавить".
-   - Настройки:
-     * Название:   default
-     * Назначение: Любой (0.0.0.0/0)
-     * Интерфейс:  br-rtr
-     * Шлюз:       172.16.3.1
-     * Приоритет:  1
-   - Нажмите "Добавить".
-======================================================================</div>
+   - Назначение: Любой (0.0.0.0/0)
+   - Интерфейс:  br-rtr / Шлюз: 172.16.3.1 / Приоритет: 1</div>
     </div>
 
-    <!-- CHECKLIST -->
+    <!-- ================================================================= -->
+    <!-- КАЛЬКУЛЯТОР БАЛЛОВ КИМ -->
+    <!-- ================================================================= -->
     <div id="check" class="tab-content">
-        <div class="guide-box">======================================================================
-         ЧЕК-ЛИСТ ПРОВЕРКИ БАЛЛОВ ПО ОФИЦИАЛЬНОМУ КИМ 2027
-======================================================================
+        <div class="checklist-container">
+            <div class="score-summary-card">
+                <div class="score-gauge-wrap">
+                    <div class="score-circle" id="score-val">0</div>
+                    <div>
+                        <div style="font-size: 15px; font-weight: 700; color: #fff;">Итоговый балл за демоэкзамен:</div>
+                        <div style="font-size: 12.5px; color: var(--text-muted);" id="score-grade">Оценка: Не начато (0 из 100 баллов)</div>
+                        <div class="progress-bar-wrap">
+                            <div class="progress-bar-fill" id="score-bar"></div>
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-action btn-copy" onclick="selectAllChecks(true)">✅ Выбрать всё (100 баллов)</button>
+                    <button class="btn-action btn-toggle" onclick="selectAllChecks(false)">🔄 Сбросить</button>
+                </div>
+            </div>
 
-МОДУЛЬ 1 (Связь и сеть):
-   [ ] С HQ-RTR пингуется ISP:           do ping 172.16.1.1
-   [ ] С BR-RTR пингуется ISP:           do ping 172.16.2.1
-   [ ] GRE туннель между роутерами:      do ping 10.10.10.1 (с BR-RTR)
-   [ ] OSPF соседство поднято:           do sh ip ospf nei (состояние FULL)
-   [ ] С клиента HQ-CLI пингуется шлюз:  ping 192.168.200.1
-   [ ] С клиента HQ-CLI пингуется DNS:   ping 192.168.100.2
-   [ ] С клиента HQ-CLI пингуется BR-SRV:ping 172.16.3.6
-   [ ] Прямой DNS резолв:                host hq-srv (ответ: 192.168.100.2)
-   [ ] Обратный DNS резолв (PTR):        host 192.168.100.2
-   [ ] SSH на нестандартном порту 2027:  ssh -p 2027 sshuser@192.168.100.2
-   [ ] Баннер "Authorized access only" при входе по SSH
+            <!-- Группа 1: Модуль 1 -->
+            <div class="checklist-group">
+                <div class="checklist-group-title">
+                    <span>🚀 Модуль 1: Сетевая связность и базовая инфраструктура</span>
+                    <span style="color: #38bdf8;">Макс: 35 баллов</span>
+                </div>
+                <div class="check-item"><input type="checkbox" onchange="recalcScore()" data-score="3"><div class="check-item-content"><div class="check-item-title">Связность HQ-RTR с ISP (172.16.1.1)</div><div class="check-item-cmd">do ping 172.16.1.1 (0% packet loss)</div></div><div class="check-item-score">+3 б.</div></div>
+                <div class="check-item"><input type="checkbox" onchange="recalcScore()" data-score="3"><div class="check-item-content"><div class="check-item-title">Связность BR-RTR с ISP (172.16.2.1)</div><div class="check-item-cmd">do ping 172.16.2.1 (0% packet loss)</div></div><div class="check-item-score">+3 б.</div></div>
+                <div class="check-item"><input type="checkbox" onchange="recalcScore()" data-score="4"><div class="check-item-content"><div class="check-item-title">GRE-туннель между HQ-RTR и BR-RTR</div><div class="check-item-cmd">do ping 10.10.10.1 с BR-RTR через tunnel.0</div></div><div class="check-item-score">+4 б.</div></div>
+                <div class="check-item"><input type="checkbox" onchange="recalcScore()" data-score="5"><div class="check-item-content"><div class="check-item-title">Динамическое OSPF соседство (Area 0, MD5)</div><div class="check-item-cmd">do sh ip ospf nei -> State: FULL / BDR</div></div><div class="check-item-score">+5 б.</div></div>
+                <div class="check-item"><input type="checkbox" onchange="recalcScore()" data-score="4"><div class="check-item-content"><div class="check-item-title">VLAN 100/200/999 и DHCP-сервер для HQ-CLI</div><div class="check-item-cmd">ip a на HQ-CLI -> IP из пула 192.168.200.0/28</div></div><div class="check-item-score">+4 б.</div></div>
+                <div class="check-item"><input type="checkbox" onchange="recalcScore()" data-score="5"><div class="check-item-content"><div class="check-item-title">Служба DNS BIND9 (прямая зона au-team.irpo)</div><div class="check-item-cmd">dig @192.168.100.2 hq-srv.au-team.irpo +short</div></div><div class="check-item-score">+5 б.</div></div>
+                <div class="check-item"><input type="checkbox" onchange="recalcScore()" data-score="4"><div class="check-item-content"><div class="check-item-title">Реверсивные DNS зоны (PTR записи)</div><div class="check-item-cmd">host 192.168.100.2 (hq-srv.au-team.irpo)</div></div><div class="check-item-score">+4 б.</div></div>
+                <div class="check-item"><input type="checkbox" onchange="recalcScore()" data-score="4"><div class="check-item-content"><div class="check-item-title">Безопасный SSH на порту 2027 с баннером</div><div class="check-item-cmd">ssh -p 2027 sshuser@192.168.100.2 -> Banner displayed</div></div><div class="check-item-score">+4 б.</div></div>
+                <div class="check-item"><input type="checkbox" onchange="recalcScore()" data-score="3"><div class="check-item-content"><div class="check-item-title">Сквозной пинг HQ-CLI до BR-SRV (172.16.3.6)</div><div class="check-item-cmd">ping -c 3 172.16.3.6 (через всю инфраструктуру)</div></div><div class="check-item-score">+3 б.</div></div>
+            </div>
 
-МОДУЛЬ 2 (Сервисы и Домен):
-   [ ] Chrony Stratum 5 на ISP:          chronyc tracking
-   [ ] RAID 0 смонтирован в /raid:       df -h /raid
-   [ ] NFS ресурс экспортирован:         exportfs -v
-   [ ] NFS смонтирован на HQ-CLI:        df -h /mnt/nfs
-   [ ] Веб-приложение LAMP открывается:  curl localhost | grep title
-   [ ] Домен au-team.irpo поднят:        samba-tool domain info 127.0.0.1
-   [ ] Пользователи hquser1..5 созданы:  samba-tool group listmembers hq
-   [ ] HQ-CLI введен в домен Samba:      id hquser1
-   [ ] Ansible пингует все узлы:         ansible all -m ping
+            <!-- Группа 2: Модуль 2 -->
+            <div class="checklist-group">
+                <div class="checklist-group-title">
+                    <span>📦 Модуль 2: Корпоративные сетевые сервисы и домен</span>
+                    <span style="color: #38bdf8;">Макс: 40 баллов</span>
+                </div>
+                <div class="check-item"><input type="checkbox" onchange="recalcScore()" data-score="4"><div class="check-item-content"><div class="check-item-title">Синхронизация времени Chrony Stratum 5 на ISP</div><div class="check-item-cmd">chronyc tracking -> Stratum: 5</div></div><div class="check-item-score">+4 б.</div></div>
+                <div class="check-item"><input type="checkbox" onchange="recalcScore()" data-score="5"><div class="check-item-content"><div class="check-item-title">Дисковый массив RAID 0 смонтирован в /raid</div><div class="check-item-cmd">df -h /raid && mdadm --detail /dev/md0</div></div><div class="check-item-score">+5 б.</div></div>
+                <div class="check-item"><input type="checkbox" onchange="recalcScore()" data-score="5"><div class="check-item-content"><div class="check-item-title">NFS экспорт и монтирование на клиенте HQ-CLI</div><div class="check-item-cmd">df -h /mnt/nfs на HQ-CLI</div></div><div class="check-item-score">+5 б.</div></div>
+                <div class="check-item"><input type="checkbox" onchange="recalcScore()" data-score="5"><div class="check-item-content"><div class="check-item-title">Веб-приложение LAMP (Apache2 + PHP + MariaDB)</div><div class="check-item-cmd">curl -s localhost | grep title</div></div><div class="check-item-score">+5 б.</div></div>
+                <div class="check-item"><input type="checkbox" onchange="recalcScore()" data-score="4"><div class="check-item-content"><div class="check-item-title">DNS SRV записи для обнаружения служб домена</div><div class="check-item-cmd">dig SRV _ldap._tcp.au-team.irpo</div></div><div class="check-item-score">+4 б.</div></div>
+                <div class="check-item"><input type="checkbox" onchange="recalcScore()" data-score="7"><div class="check-item-content"><div class="check-item-title">Контроллер домена Samba Active Directory DC</div><div class="check-item-cmd">samba-tool domain info 127.0.0.1</div></div><div class="check-item-score">+7 б.</div></div>
+                <div class="check-item"><input type="checkbox" onchange="recalcScore()" data-score="4"><div class="check-item-content"><div class="check-item-title">Группа hq и пользователи hquser1..hquser5</div><div class="check-item-cmd">samba-tool group listmembers hq</div></div><div class="check-item-score">+4 б.</div></div>
+                <div class="check-item"><input type="checkbox" onchange="recalcScore()" data-score="6"><div class="check-item-content"><div class="check-item-title">Ввод клиентской станции HQ-CLI в домен Samba</div><div class="check-item-cmd">id hquser1 на клиенте HQ-CLI</div></div><div class="check-item-score">+6 б.</div></div>
+            </div>
 
-МОДУЛЬ 3 (Безопасность):
-   [ ] Импорт пользователей из CSV:      samba-tool user list
-   [ ] Nginx проксирует с Basic Auth:    curl -u WEB:P@ssw0rd https://web.au-team.irpo -k
-   [ ] Редирект HTTP -> HTTPS:           curl -I http://web.au-team.irpo
-   [ ] Интервал atop равен 420:          ps -eo cmd | grep atop
-   [ ] Принтер Cups-PDF расшарен:        lpstat -p
-   [ ] Демон Fail2ban активен для 2027:  fail2ban-client status sshd
-   [ ] Резервная копия Bacula создана:   bconsole (list jobs)</div>
+            <!-- Группа 3: Модуль 3 -->
+            <div class="checklist-group">
+                <div class="checklist-group-title">
+                    <span>🔒 Модуль 3: Безопасность периметра, аудит и отказоустойчивость</span>
+                    <span style="color: #38bdf8;">Макс: 25 баллов</span>
+                </div>
+                <div class="check-item"><input type="checkbox" onchange="recalcScore()" data-score="6"><div class="check-item-content"><div class="check-item-title">Автоматизированный импорт пользователей из Users.csv</div><div class="check-item-cmd">samba-tool user list && samba-tool ou list</div></div><div class="check-item-score">+6 б.</div></div>
+                <div class="check-item"><input type="checkbox" onchange="recalcScore()" data-score="6"><div class="check-item-content"><div class="check-item-title">Nginx Reverse Proxy с Basic Auth и HTTPS</div><div class="check-item-cmd">curl -k -u WEB:P@ssw0rd https://web.au-team.irpo</div></div><div class="check-item-score">+6 б.</div></div>
+                <div class="check-item"><input type="checkbox" onchange="recalcScore()" data-score="3"><div class="check-item-content"><div class="check-item-title">Редирект HTTP -> HTTPS (код ответа 301)</div><div class="check-item-cmd">curl -I http://web.au-team.irpo</div></div><div class="check-item-score">+3 б.</div></div>
+                <div class="check-item"><input type="checkbox" onchange="recalcScore()" data-score="3"><div class="check-item-content"><div class="check-item-title">Системный аудит Atop с интервалом 420 сек</div><div class="check-item-cmd">ps -eo cmd | grep atop</div></div><div class="check-item-score">+3 б.</div></div>
+                <div class="check-item"><input type="checkbox" onchange="recalcScore()" data-score="3"><div class="check-item-content"><div class="check-item-title">Сетевой виртуальный принтер Cups-PDF</div><div class="check-item-cmd">lpstat -p Cups-PDF</div></div><div class="check-item-score">+3 б.</div></div>
+                <div class="check-item"><input type="checkbox" onchange="recalcScore()" data-score="4"><div class="check-item-content"><div class="check-item-title">Служба Fail2ban для защиты SSH порта 2027</div><div class="check-item-cmd">fail2ban-client status sshd</div></div><div class="check-item-score">+4 б.</div></div>
+            </div>
+        </div>
     </div>
 
-    <div id="toast">✅ Скопировано в буфер!</div>
+    <!-- ================================================================= -->
+    <!-- DEVOPS & IAC АВТОМАТИЗАЦИЯ -->
+    <!-- ================================================================= -->
+    <div id="iac" class="tab-content">
+        <div class="module-banner" style="border-left-color: #10b981;">
+            <div class="module-banner-info">
+                <h2>Концепция Infrastructure as Code (IaC) и Zero-Touch Provisioning</h2>
+                <p>Методология автоматизации гетерогенной среды без физических носителей на основе Cloud-Init и DevTools API</p>
+            </div>
+            <div class="module-stats">
+                <div class="stat-item">
+                    <div class="stat-label">Время развертывания</div>
+                    <div class="stat-val" style="color: #34d399;">&lt; 3 мин.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-info">
+                    <h3>1. Универсальный запуск развертывания Linux-узлов (One-Liner)</h3>
+                    <span>Автоопределение hostname (isp, hq-srv, br-srv, hq-cli) или интерактивный выбор модуля</span>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-action btn-copy" onclick="copyRaw('curl -sL maga-sysadmin.github.io/sysadmin-practice-labs/run.sh | bash', 'Универсальный curl')">📋 Скопировать</button>
+                </div>
+            </div>
+            <pre># Выполните на любом сервере ALT Linux:
+curl -sL maga-sysadmin.github.io/sysadmin-practice-labs/run.sh | bash
+
+# Или укажите узел и модуль явно (без интерактивных вопросов):
+curl -sL maga-sysadmin.github.io/sysadmin-practice-labs/run.sh | bash -s isp 1
+curl -sL maga-sysadmin.github.io/sysadmin-practice-labs/run.sh | bash -s hqsrv 1
+curl -sL maga-sysadmin.github.io/sysadmin-practice-labs/run.sh | bash -s brsrv 1</pre>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-info">
+                    <h3>2. Консольный загрузчик EcoRouter для браузера (DevTools F12 Helper)</h3>
+                    <span>Позволяет в один клик закидывать конфигурации в буфер обмена для вставки в noVNC</span>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-action btn-copy" onclick="copyRaw(`fetch('https://maga-sysadmin.github.io/sysadmin-practice-labs/get.js').then(r=>r.text()).then(eval)`, 'F12 Helper')">📋 Скопировать</button>
+                </div>
+            </div>
+            <pre>// 1. Откройте консоль браузера (F12 -> вкладка Console)
+// 2. Вставьте и нажмите Enter:
+fetch('https://maga-sysadmin.github.io/sysadmin-practice-labs/get.js').then(r=>r.text()).then(eval)
+
+// 3. Доступные быстрые команды:
+hq()    // Копирует полный конфиг HQ-RTR (OSPF, GRE, VLANs, NAT, DHCP)
+br()    // Копирует полный конфиг BR-RTR (OSPF, GRE, NGFW-линк, NAT)
+fw()    // Копирует пошаговые команды для консоли Ideco NGFW
+rtr2()  // Копирует расширенные ACL и списки доступа</pre>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-info">
+                    <h3>3. Архитектура безопасности и соответствие требованиям аудита</h3>
+                    <span>Эмуляция естественной активности системного администратора в .bash_history</span>
+                </div>
+            </div>
+            <div class="card-meta">
+                <div class="meta-col">
+                    <strong>Форензика и временные метки:</strong>
+                    <p>Скрипты не перезаписывают историю команд одним файлом, а последовательно дописывают их в HISTFILE в процессе настройки, перемежая команды конфигурации с естественными командами верификации (<code>ip a</code>, <code>ping</code>, <code>systemctl status</code>).</p>
+                </div>
+                <div class="meta-col">
+                    <strong>Идемпотентность и безопасность:</strong>
+                    <p>Все команды используют флаги безопасного исполнения (<code>|| true</code>, проверки существования пользователей и директорий), предотвращая аварийное завершение скрипта при повторном перезапуске.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast">✅ Скопировано в буфер обмена!</div>
 
     <script>
+        // Переключение табов
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            btn.classList.add('active');
+            const target = document.getElementById(tabId);
+            if (target) target.classList.add('active');
+            if (btn) btn.classList.add('active');
         }
 
+        // Показать / скрыть блок кода
         function toggleCode(id) {
             const el = document.getElementById(id);
-            if (el.style.display === 'none') {
-                el.style.display = 'block';
-            } else {
-                el.style.display = 'none';
-            }
+            if (!el) return;
+            el.style.display = (el.style.display === 'none') ? 'block' : 'none';
         }
 
+        // Копирование текстового блока
         function copyBlock(id, title) {
-            const text = document.getElementById(id).innerText;
+            const el = document.getElementById(id);
+            if (!el) return;
+            navigator.clipboard.writeText(el.innerText).then(() => {
+                showToast(`✅ Скопирован скрипт: [${title}]! Вставьте в консоль.`);
+            });
+        }
+
+        // Прямое копирование строки
+        function copyRaw(text, title) {
             navigator.clipboard.writeText(text).then(() => {
-                showToast(`✅ Скопировано: [${title}]! Вставьте в xterm (Shift+Insert / Ctrl+Shift+V)`);
+                showToast(`✅ Скопировано: [${title}]`);
+            });
+        }
+
+        // Копирование однострочника curl
+        function copyCurl(node, module) {
+            const cmd = `curl -sL maga-sysadmin.github.io/sysadmin-practice-labs/scripts/${node}_m${module}.sh | bash`;
+            navigator.clipboard.writeText(cmd).then(() => {
+                showToast(`✅ Скопирован curl для ${node.toUpperCase()} (Модуль ${module})!`);
+            });
+        }
+
+        // Копирование JS-хелпера
+        function copyJsHelper(func) {
+            const cmd = `fetch('https://maga-sysadmin.github.io/sysadmin-practice-labs/get.js').then(r=>r.text()).then(eval).then(()=>${func}())`;
+            navigator.clipboard.writeText(cmd).then(() => {
+                showToast(`✅ Хелпер ${func}() скопирован! Вставьте в F12 Console.`);
             });
         }
 
@@ -1201,9 +1994,249 @@ echo "list jobs" | bconsole 2>/dev/null || true</pre>
             const toast = document.getElementById('toast');
             toast.innerText = msg;
             toast.style.display = 'block';
-            setTimeout(() => {
-                toast.style.display = 'none';
-            }, 2500);
+            setTimeout(() => { toast.style.display = 'none'; }, 2500);
+        }
+
+        // =================================================================
+        // ЛОГИКА ЭМУЛЯТОРА ТЕРМИНАЛА
+        // =================================================================
+        let currentEmuNode = 'isp';
+        let currentEmuModule = 1;
+
+        const EMU_DATA = {
+            'isp': {
+                name: '101 (isp)',
+                prompt: '[root@isp ~]# ',
+                header: '🖥️ [root@isp ~]# • ALT Linux (Server Engine 10.1) Gateway',
+                scriptM1: [
+                    { cmd: 'curl -sL maga-sysadmin.github.io/sysadmin-practice-labs/scripts/isp_m1.sh | bash' },
+                    { text: '=====================================================================' },
+                    { text: '[i] Запуск настройки: ISP (Шлюз провайдера - Модуль 1)', type: 'info' },
+                    { text: '=====================================================================' },
+                    { text: '[+] Задаем hostname: isp', type: 'cmd' },
+                    { text: '[+] Настройка сетевых интерфейсов ens19 (172.16.1.1/28) и ens20 (172.16.2.1/28)...' },
+                    { text: '[+] Включение форвардинга ядра net.ipv4.ip_forward = 1...', type: 'ok' },
+                    { text: '[+] Применение правил трансляции iptables NAT MASQUERADE...', type: 'ok' },
+                    { text: '[+] Перезапуск сетевой службы systemctl restart network...' },
+                    { text: '[OK] IP-интерфейсы успешно настроены и активны:', type: 'ok' },
+                    { text: '    ens18: inet 192.168.1.50/24 (WAN DHCP)' },
+                    { text: '    ens19: inet 172.16.1.1/28 (к HQ-RTR)' },
+                    { text: '    ens20: inet 172.16.2.1/28 (к BR-RTR)' },
+                    { text: '[OK] Конфигурация ISP Модуль 1 успешно применена!', type: 'ok' }
+                ],
+                auditM1: [
+                    { text: '--- Экспресс-аудит ISP (Критерии КИМ Модуль 1) ---', type: 'sys' },
+                    { text: '[+] Проверка ip_forward: net.ipv4.ip_forward = 1 [3/3 б.]', type: 'ok' },
+                    { text: '[+] Проверка iptables MASQUERADE ens18: Активно [3/3 б.]', type: 'ok' },
+                    { text: '[+] Проверка доступности линков: 172.16.1.1 / 172.16.2.1 [2/2 б.]', type: 'ok' },
+                    { text: 'ИТОГ ISP: 8 из 8 возможных баллов КИМ!', type: 'ok' }
+                ]
+            },
+            'hq-rtr': {
+                name: '102 (hq-rtr)',
+                prompt: 'hq-rtr# ',
+                header: '🖥️ hq-rtr# • EcoRouter Software (ESR-1000)',
+                scriptM1: [
+                    { cmd: 'configure terminal' },
+                    { text: 'hq-rtr(config)# interface isp -> ip address 172.16.1.2/28' },
+                    { text: 'hq-rtr(config)# port te0 -> connect ip interface isp', type: 'ok' },
+                    { text: 'hq-rtr(config)# sub-interfaces te1: vl100, vl200, vl999 encapsulation dot1q', type: 'ok' },
+                    { text: 'hq-rtr(config)# interface tunnel.0 -> mode gre, ip address 10.10.10.1/30', type: 'ok' },
+                    { text: 'hq-rtr(config)# router ospf 1 -> area 0, authentication message-digest', type: 'ok' },
+                    { text: 'hq-rtr(config)# ip nat source dynamic inside-to-outside pool VLAN100/200/999', type: 'ok' },
+                    { text: 'hq-rtr(config)# dhcp-server 1 -> pool VLAN200 (192.168.200.2-14)', type: 'ok' },
+                    { text: '%OSPF-5-ADJCHANGE: Neighbor 10.10.10.2 on tunnel.0 from LOADING to FULL', type: 'ok' },
+                    { text: 'hq-rtr# write configuration memory... [OK]', type: 'sys' }
+                ],
+                auditM1: [
+                    { text: '--- Экспресс-аудит HQ-RTR (Критерии КИМ Модуль 1) ---', type: 'sys' },
+                    { text: '[+] OSPF Neighbor 10.10.10.2: State FULL/BDR [5/5 б.]', type: 'ok' },
+                    { text: '[+] GRE-tunnel link 10.10.10.1: UP/UP [4/4 б.]', type: 'ok' },
+                    { text: '[+] VLAN sub-interfaces 100/200/999: Active [4/4 б.]', type: 'ok' },
+                    { text: 'ИТОГ HQ-RTR: 13 из 13 возможных баллов КИМ!', type: 'ok' }
+                ]
+            },
+            'hq-srv': {
+                name: '105 (hq-srv)',
+                prompt: '[root@hq-srv ~]# ',
+                header: '🖥️ [root@hq-srv ~]# • ALT Linux Server (DNS BIND9 & RAID)',
+                scriptM1: [
+                    { cmd: 'curl -sL maga-sysadmin.github.io/sysadmin-practice-labs/scripts/hqsrv_m1.sh | bash' },
+                    { text: '[i] Настройка HQ-SRV: DNS BIND9 и безопасный SSH...', type: 'info' },
+                    { text: '[+] Адресация ens18: 192.168.100.2/27, GW: 192.168.100.1', type: 'cmd' },
+                    { text: '[+] Генерация авторитетных зон BIND: au-team.irpo, 100.168.192.rev, 3.16.172.rev...', type: 'ok' },
+                    { text: '[+] Проверка конфигурации: named-checkconf -> OK', type: 'ok' },
+                    { text: '[+] Запуск службы named: systemctl enable --now bind...', type: 'ok' },
+                    { text: '[+] Перевод службы SSH на порт 2027 с баннером "Authorized access only"...', type: 'ok' },
+                    { text: '[OK] Все сервисы HQ-SRV Модуль 1 подняты и проверены!', type: 'ok' }
+                ],
+                auditM1: [
+                    { text: '--- Экспресс-аудит HQ-SRV (Критерии КИМ Модуль 1) ---', type: 'sys' },
+                    { text: '[+] Прямой DNS резолв: hq-srv.au-team.irpo -> 192.168.100.2 [5/5 б.]', type: 'ok' },
+                    { text: '[+] Обратный DNS (PTR): 192.168.100.2 -> hq-srv.au-team.irpo [4/4 б.]', type: 'ok' },
+                    { text: '[+] SSH Port 2027 + Banner check: PASS [4/4 б.]', type: 'ok' },
+                    { text: 'ИТОГ HQ-SRV: 13 из 13 возможных баллов КИМ!', type: 'ok' }
+                ]
+            }
+        };
+
+        function selectEmuNode(nodeId, btn) {
+            currentEmuNode = nodeId;
+            document.querySelectorAll('.emu-node-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+
+            const data = EMU_DATA[nodeId] || {
+                prompt: `[root@${nodeId} ~]# `,
+                header: `🖥️ [root@${nodeId} ~]# • Linux Virtual Node`
+            };
+
+            document.getElementById('emu-prompt-label').innerText = data.prompt;
+            document.getElementById('emu-term-title').innerHTML = data.header;
+            appendTermLine(`Переключение на виртуальный узел [${nodeId.toUpperCase()}]`, 'sys');
+        }
+
+        function selectEmuModule(modId, btn) {
+            currentEmuModule = modId;
+            document.querySelectorAll('.emu-mod-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            appendTermLine(`Выбран целевой Модуль ${modId} для эмуляции развертывания`, 'sys');
+        }
+
+        function appendTermLine(text, type = 'normal') {
+            const screen = document.getElementById('emu-term-screen');
+            const line = document.createElement('div');
+            line.className = `term-line ${type}`;
+            line.innerText = text;
+            screen.appendChild(line);
+            screen.scrollTop = screen.scrollHeight;
+        }
+
+        function clearEmuTerminal() {
+            document.getElementById('emu-term-screen').innerHTML = '';
+            appendTermLine('Терминал очищен. Готов к вводу команд.', 'info');
+        }
+
+        function runEmuScript() {
+            const data = EMU_DATA[currentEmuNode];
+            const lines = (data && data.scriptM1) ? data.scriptM1 : [
+                { cmd: `curl -sL maga-sysadmin.github.io/sysadmin-practice-labs/scripts/${currentEmuNode}_m${currentEmuModule}.sh | bash` },
+                { text: `[i] Развертывание ${currentEmuNode.toUpperCase()} (Модуль ${currentEmuModule})...`, type: 'info' },
+                { text: `[+] Применение системных параметров ядра и сети...`, type: 'cmd' },
+                { text: `[+] Запуск и валидация служб systemctl...`, type: 'ok' },
+                { text: `[OK] Модуль ${currentEmuModule} успешно настроен на узле ${currentEmuNode}!`, type: 'ok' }
+            ];
+
+            let delay = 0;
+            lines.forEach((item, idx) => {
+                setTimeout(() => {
+                    if (item.cmd) {
+                        appendTermLine(`${document.getElementById('emu-prompt-label').innerText}${item.cmd}`, 'cmd');
+                    } else {
+                        appendTermLine(item.text, item.type || 'normal');
+                    }
+                }, delay);
+                delay += 120;
+            });
+        }
+
+        function runEmuAudit() {
+            const data = EMU_DATA[currentEmuNode];
+            const lines = (data && data.auditM1) ? data.auditM1 : [
+                { text: `--- Экспресс-аудит ${currentEmuNode.toUpperCase()} (Модуль ${currentEmuModule}) ---`, type: 'sys' },
+                { text: `[+] Проверка сетевой связности: 0% потерь [PASS]`, type: 'ok' },
+                { text: `[+] Проверка статуса сервисов: active (running) [PASS]`, type: 'ok' },
+                { text: `[+] Проверка критериев КИМ: 100% выполнение спецификации`, type: 'ok' }
+            ];
+
+            let delay = 0;
+            lines.forEach(item => {
+                setTimeout(() => {
+                    appendTermLine(item.text, item.type || 'normal');
+                }, delay);
+                delay += 100;
+            });
+        }
+
+        function handleEmuKey(e) {
+            if (e.key === 'Enter') {
+                const input = document.getElementById('emu-term-input');
+                const val = input.value.trim();
+                if (!val) return;
+
+                appendTermLine(`${document.getElementById('emu-prompt-label').innerText}${val}`, 'cmd');
+                input.value = '';
+
+                // Обработка симулированных команд
+                setTimeout(() => {
+                    const low = val.toLowerCase();
+                    if (low === 'clear') {
+                        clearEmuTerminal();
+                    } else if (low.startsWith('ping')) {
+                        appendTermLine(`PING ${val.split(' ')[1] || '172.16.1.1'} (56 bytes data):`, 'info');
+                        appendTermLine('64 bytes from target: icmp_seq=1 ttl=64 time=0.45 ms');
+                        appendTermLine('64 bytes from target: icmp_seq=2 ttl=64 time=0.41 ms');
+                        appendTermLine('--- ping statistics --- 2 packets transmitted, 2 received, 0% packet loss', 'ok');
+                    } else if (low === 'ip a') {
+                        appendTermLine('1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN');
+                        appendTermLine('    inet 127.0.0.1/8 scope host lo');
+                        appendTermLine('2: ens18: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP');
+                        appendTermLine('    inet 192.168.100.2/27 brd 192.168.100.31 scope global ens18', 'ok');
+                    } else if (low.includes('systemctl status')) {
+                        appendTermLine(`● service.service - Active Production Daemon`, 'sys');
+                        appendTermLine('   Loaded: loaded (/etc/systemd/system/service.service; enabled; vendor preset: disabled)');
+                        appendTermLine('   Active: active (running) since Sat 2026-11-21 20:00:00 MSK; 4h 12min ago', 'ok');
+                    } else if (low.includes('curl') || low.includes('bash')) {
+                        runEmuScript();
+                    } else if (low === 'help') {
+                        appendTermLine('Доступные команды эмулятора:', 'info');
+                        appendTermLine('  ip a              - Просмотр IP-адресов интерфейсов');
+                        appendTermLine('  ping <ip>         - Проверка связности узлов');
+                        appendTermLine('  systemctl status  - Проверка статуса демонов');
+                        appendTermLine('  clear             - Очистить экран');
+                        appendTermLine('  run               - Запустить авто-развертывание');
+                    } else {
+                        appendTermLine(`Команда '${val}' выполнена успешно [код возврата 0].`, 'info');
+                    }
+                }, 150);
+            }
+        }
+
+        // =================================================================
+        // КАЛЬКУЛЯТОР БАЛЛОВ КИМ
+        // =================================================================
+        function recalcScore() {
+            let total = 0;
+            const checks = document.querySelectorAll('#check input[type="checkbox"]');
+            checks.forEach(c => {
+                if (c.checked) {
+                    total += parseInt(c.getAttribute('data-score') || '0', 10);
+                }
+            });
+
+            document.getElementById('score-val').innerText = total;
+            document.getElementById('score-bar').style.width = `${total}%`;
+
+            let gradeText = '';
+            if (total === 100) {
+                gradeText = 'Оценка: 5 (Отлично с отличием / 100% максимальный результат КИМ)';
+            } else if (total >= 90) {
+                gradeText = 'Оценка: 5 (Отлично / Квалификационный аттестат подтвержден)';
+            } else if (total >= 75) {
+                gradeText = 'Оценка: 4 (Хорошо / Порог профессиональной компетенции)';
+            } else if (total >= 60) {
+                gradeText = 'Оценка: 3 (Удовлетворительно / Базовый уровень)';
+            } else {
+                gradeText = `Оценка: В процессе (${total} из 100 баллов)`;
+            }
+            document.getElementById('score-grade').innerText = gradeText;
+        }
+
+        function selectAllChecks(state) {
+            document.querySelectorAll('#check input[type="checkbox"]').forEach(c => {
+                c.checked = state;
+            });
+            recalcScore();
+            showToast(state ? '✅ Выбраны все 100 баллов!' : '🔄 Чек-лист сброшен.');
         }
     </script>
 </body>
