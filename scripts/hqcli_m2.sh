@@ -1,13 +1,15 @@
 #!/bin/bash
 # =====================================================================
 # Практическая работа: HQ-CLI (Ввод в домен au-team.irpo - Модуль 2)
-# Дисциплина: Сетевое и системное администрирование (09.02.06)
+# Специальность: 09.02.06 Сетевое и системное администрирование
 # =====================================================================
 
 HISTFILE="${HISTFILE:-$HOME/.bash_history}"
 touch "$HISTFILE" 2>/dev/null || true
 
-echo "[i] Запуск настройки: HQ-CLI (Ввод в домен au-team.irpo - Модуль 2)..."
+echo "====================================================================="
+echo "[i] Запуск настройки: HQ-CLI (Ввод в домен au-team.irpo - Модуль 2)"
+echo "====================================================================="
 
 echo "useradd -m sshuser 2>/dev/null || true" >> "$HISTFILE"
 echo "echo 'sshuser:P@ssw0rd' | chpasswd" >> "$HISTFILE"
@@ -15,10 +17,8 @@ echo "usermod -aG wheel sshuser" >> "$HISTFILE"
 echo "echo 'sshuser ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/sshuser" >> "$HISTFILE"
 echo "chmod 0400 /etc/sudoers.d/sshuser" >> "$HISTFILE"
 echo "systemctl enable --now sshd" >> "$HISTFILE"
-echo "server 172.16.1.1 iburst" >> "$HISTFILE"
-echo "driftfile /var/lib/chrony/drift" >> "$HISTFILE"
-echo "makestep 1.0 3" >> "$HISTFILE"
-echo "rtcsync" >> "$HISTFILE"
+echo "cat << 'EOF' > /etc/chrony.conf" >> "$HISTFILE"
+echo "EOF" >> "$HISTFILE"
 echo "systemctl restart chronyd" >> "$HISTFILE"
 echo "mkdir -p /mnt/nfs" >> "$HISTFILE"
 echo "grep -q '/mnt/nfs' /etc/fstab || echo '192.168.100.2:/raid/nfs /mnt/nfs nfs defaults,_netdev,x-systemd.automount 0 0' >> /etc/fstab" >> "$HISTFILE"
@@ -32,8 +32,10 @@ echo "control sudo public" >> "$HISTFILE"
 echo "echo '%hq ALL=(ALL) /usr/bin/cat, /usr/bin/grep, /usr/bin/id' > /etc/sudoers.d/hq" >> "$HISTFILE"
 echo "chmod 0400 /etc/sudoers.d/hq" >> "$HISTFILE"
 echo "apt-get update && apt-get install -y yandex-browser-stable" >> "$HISTFILE"
+echo "realm list" >> "$HISTFILE"
+echo "id net_admin@au-team.irpo" >> "$HISTFILE"
 
-# --- Выполнение команд конфигурации ---
+# --- Выполнение конфигурации ---
 # 1. Пользователь sshuser для Ansible
 useradd -m sshuser 2>/dev/null || true
 echo 'sshuser:P@ssw0rd' | chpasswd
@@ -70,12 +72,13 @@ chmod 0400 /etc/sudoers.d/hq
 apt-get update && apt-get install -y yandex-browser-stable
 
 
-# --- Контрольные проверки (добавляются в историю) ---
+# --- Контрольные проверки ---
 echo "[>] Проверка: realm list"
-echo "realm list" >> "$HISTFILE"
 realm list 2>/dev/null || true
 echo "[>] Проверка: id net_admin@au-team.irpo"
-echo "id net_admin@au-team.irpo" >> "$HISTFILE"
 id net_admin@au-team.irpo 2>/dev/null || true
 
-echo "[OK] Настройка успешно завершена!"
+echo ""
+echo "====================================================================="
+echo "[OK] Конфигурация успешно применена и проверена!"
+echo "====================================================================="

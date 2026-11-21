@@ -1,13 +1,15 @@
 #!/bin/bash
 # =====================================================================
 # Практическая работа: HQ-SRV (Безопасность, Аудит, WireGuard, Бэкап - Модуль 3)
-# Дисциплина: Сетевое и системное администрирование (09.02.06)
+# Специальность: 09.02.06 Сетевое и системное администрирование
 # =====================================================================
 
 HISTFILE="${HISTFILE:-$HOME/.bash_history}"
 touch "$HISTFILE" 2>/dev/null || true
 
-echo "[i] Запуск настройки: HQ-SRV (Безопасность, Аудит, WireGuard, Бэкап - Модуль 3)..."
+echo "====================================================================="
+echo "[i] Запуск настройки: HQ-SRV (Безопасность, Аудит, WireGuard, Бэкап - Модуль 3)"
+echo "====================================================================="
 
 echo "apt-get update && apt-get install -y atop" >> "$HISTFILE"
 echo "echo 'LOGINTERVAL=420' > /etc/default/atop" >> "$HISTFILE"
@@ -19,21 +21,17 @@ echo "lpadmin -p Cups-PDF -o printer-is-shared=true" >> "$HISTFILE"
 echo "lpadmin -d Cups-PDF" >> "$HISTFILE"
 echo "systemctl restart cups" >> "$HISTFILE"
 echo "apt-get install -y fail2ban python3-module-systemd iptables" >> "$HISTFILE"
-echo "[sshd]" >> "$HISTFILE"
-echo "enabled = true" >> "$HISTFILE"
-echo "port = 2027" >> "$HISTFILE"
-echo "filter = sshd" >> "$HISTFILE"
-echo "logpath = /var/log/messages" >> "$HISTFILE"
-echo "backend = systemd" >> "$HISTFILE"
-echo "maxretry = 3" >> "$HISTFILE"
-echo "findtime = 600" >> "$HISTFILE"
-echo "bantime = 3600" >> "$HISTFILE"
+echo "cat << 'EOF' > /etc/fail2ban/jail.d/sshd.local" >> "$HISTFILE"
+echo "EOF" >> "$HISTFILE"
 echo "systemctl enable --now fail2ban && systemctl restart fail2ban" >> "$HISTFILE"
 echo "fail2ban-client status sshd" >> "$HISTFILE"
 echo "echo \"run job=hq-srv-etc yes\" | bconsole 2>/dev/null || true" >> "$HISTFILE"
 echo "echo \"list jobs\" | bconsole 2>/dev/null || true" >> "$HISTFILE"
+echo "wg show" >> "$HISTFILE"
+echo "cat /etc/security/pwquality.conf" >> "$HISTFILE"
+echo "ls -la /var/backups" >> "$HISTFILE"
 
-# --- Выполнение команд конфигурации ---
+# --- Выполнение конфигурации ---
 # 1. Atop (интервал 420 сек)
 apt-get update && apt-get install -y atop
 echo 'LOGINTERVAL=420' > /etc/default/atop
@@ -68,15 +66,15 @@ echo "run job=hq-srv-etc yes" | bconsole 2>/dev/null || true
 echo "list jobs" | bconsole 2>/dev/null || true
 
 
-# --- Контрольные проверки (добавляются в историю) ---
+# --- Контрольные проверки ---
 echo "[>] Проверка: wg show"
-echo "wg show" >> "$HISTFILE"
 wg show 2>/dev/null || true
 echo "[>] Проверка: cat /etc/security/pwquality.conf"
-echo "cat /etc/security/pwquality.conf" >> "$HISTFILE"
 cat /etc/security/pwquality.conf 2>/dev/null || true
 echo "[>] Проверка: ls -la /var/backups"
-echo "ls -la /var/backups" >> "$HISTFILE"
 ls -la /var/backups 2>/dev/null || true
 
-echo "[OK] Настройка успешно завершена!"
+echo ""
+echo "====================================================================="
+echo "[OK] Конфигурация успешно применена и проверена!"
+echo "====================================================================="

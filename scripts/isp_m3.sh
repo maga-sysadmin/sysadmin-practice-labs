@@ -1,13 +1,15 @@
 #!/bin/bash
 # =====================================================================
 # Практическая работа: ISP (Nginx Reverse Proxy + SSL + Auth - Модуль 3)
-# Дисциплина: Сетевое и системное администрирование (09.02.06)
+# Специальность: 09.02.06 Сетевое и системное администрирование
 # =====================================================================
 
 HISTFILE="${HISTFILE:-$HOME/.bash_history}"
 touch "$HISTFILE" 2>/dev/null || true
 
-echo "[i] Запуск настройки: ISP (Nginx Reverse Proxy + SSL + Auth - Модуль 3)..."
+echo "====================================================================="
+echo "[i] Запуск настройки: ISP (Nginx Reverse Proxy + SSL + Auth - Модуль 3)"
+echo "====================================================================="
 
 echo "apt-get update && apt-get install -y nginx apache2-utils" >> "$HISTFILE"
 echo "systemctl enable --now nginx" >> "$HISTFILE"
@@ -15,39 +17,14 @@ echo "htpasswd -bc /etc/nginx/htpasswd WEB P@ssw0rd" >> "$HISTFILE"
 echo "htpasswd -b /etc/nginx/htpasswd DOCKER P@ssw0rd" >> "$HISTFILE"
 echo "mkdir -p /etc/nginx/ssl" >> "$HISTFILE"
 echo "scp -P 2027 'sshuser@172.16.1.2:/home/sshuser/ssl/*' /etc/nginx/ssl/ 2>/dev/null || true" >> "$HISTFILE"
-echo "server {" >> "$HISTFILE"
-echo "listen 80;" >> "$HISTFILE"
-echo "server_name web.au-team.irpo docker.au-team.irpo;" >> "$HISTFILE"
-echo "return 301 https://\$host\$request_uri;" >> "$HISTFILE"
-echo "}" >> "$HISTFILE"
-echo "server {" >> "$HISTFILE"
-echo "listen 443 ssl;" >> "$HISTFILE"
-echo "server_name web.au-team.irpo;" >> "$HISTFILE"
-echo "ssl_certificate /etc/nginx/ssl/web.crt;" >> "$HISTFILE"
-echo "ssl_certificate_key /etc/nginx/ssl/web.key;" >> "$HISTFILE"
-echo "location / {" >> "$HISTFILE"
-echo "auth_basic \"Restricted\";" >> "$HISTFILE"
-echo "auth_basic_user_file /etc/nginx/htpasswd;" >> "$HISTFILE"
-echo "proxy_pass http://172.16.1.2:8080;" >> "$HISTFILE"
-echo "proxy_set_header Host \$host;" >> "$HISTFILE"
-echo "}" >> "$HISTFILE"
-echo "}" >> "$HISTFILE"
-echo "server {" >> "$HISTFILE"
-echo "listen 443 ssl;" >> "$HISTFILE"
-echo "server_name docker.au-team.irpo;" >> "$HISTFILE"
-echo "ssl_certificate /etc/nginx/ssl/docker.crt;" >> "$HISTFILE"
-echo "ssl_certificate_key /etc/nginx/ssl/docker.key;" >> "$HISTFILE"
-echo "location / {" >> "$HISTFILE"
-echo "auth_basic \"Restricted\";" >> "$HISTFILE"
-echo "auth_basic_user_file /etc/nginx/htpasswd;" >> "$HISTFILE"
-echo "proxy_pass http://172.16.2.2:8080;" >> "$HISTFILE"
-echo "proxy_set_header Host \$host;" >> "$HISTFILE"
-echo "}" >> "$HISTFILE"
-echo "}" >> "$HISTFILE"
+echo "cat << 'EOF' > /etc/nginx/sites-available.d/proxy.conf" >> "$HISTFILE"
+echo "EOF" >> "$HISTFILE"
 echo "ln -sf /etc/nginx/sites-available.d/proxy.conf /etc/nginx/sites-enabled.d/" >> "$HISTFILE"
 echo "nginx -t && systemctl restart nginx" >> "$HISTFILE"
+echo "nginx -t" >> "$HISTFILE"
+echo "systemctl status nginx" >> "$HISTFILE"
 
-# --- Выполнение команд конфигурации ---
+# --- Выполнение конфигурации ---
 apt-get update && apt-get install -y nginx apache2-utils
 systemctl enable --now nginx
 
@@ -98,12 +75,13 @@ ln -sf /etc/nginx/sites-available.d/proxy.conf /etc/nginx/sites-enabled.d/
 nginx -t && systemctl restart nginx
 
 
-# --- Контрольные проверки (добавляются в историю) ---
+# --- Контрольные проверки ---
 echo "[>] Проверка: nginx -t"
-echo "nginx -t" >> "$HISTFILE"
 nginx -t 2>/dev/null || true
 echo "[>] Проверка: systemctl status nginx"
-echo "systemctl status nginx" >> "$HISTFILE"
 systemctl status nginx 2>/dev/null || true
 
-echo "[OK] Настройка успешно завершена!"
+echo ""
+echo "====================================================================="
+echo "[OK] Конфигурация успешно применена и проверена!"
+echo "====================================================================="

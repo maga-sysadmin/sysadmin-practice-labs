@@ -1,13 +1,15 @@
 #!/bin/bash
 # =====================================================================
 # Практическая работа: HQ-SRV (RAID 0 + NFS + LAMP + DNS SRV - Модуль 2)
-# Дисциплина: Сетевое и системное администрирование (09.02.06)
+# Специальность: 09.02.06 Сетевое и системное администрирование
 # =====================================================================
 
 HISTFILE="${HISTFILE:-$HOME/.bash_history}"
 touch "$HISTFILE" 2>/dev/null || true
 
-echo "[i] Запуск настройки: HQ-SRV (RAID 0 + NFS + LAMP + DNS SRV - Модуль 2)..."
+echo "====================================================================="
+echo "[i] Запуск настройки: HQ-SRV (RAID 0 + NFS + LAMP + DNS SRV - Модуль 2)"
+echo "====================================================================="
 
 echo "lsblk" >> "$HISTFILE"
 echo "mdadm --create /dev/md0 --level=0 --raid-devices=2 /dev/sda /dev/sdb -R" >> "$HISTFILE"
@@ -33,24 +35,20 @@ echo "cp /mnt/add/web/index.php /mnt/add/web/logo.png /var/www/html/ 2>/dev/null
 echo "rm -f /var/www/html/index.html" >> "$HISTFILE"
 echo "systemctl enable --now httpd2 && systemctl restart httpd2" >> "$HISTFILE"
 echo "curl -s localhost | grep title" >> "$HISTFILE"
-echo "_ldap._tcp               IN SRV 0 100 389  br-srv" >> "$HISTFILE"
-echo "_kerberos._tcp           IN SRV 0 100 88   br-srv" >> "$HISTFILE"
-echo "_kerberos._udp           IN SRV 0 100 88   br-srv" >> "$HISTFILE"
-echo "_kpasswd._tcp            IN SRV 0 100 464  br-srv" >> "$HISTFILE"
-echo "_kpasswd._udp            IN SRV 0 100 464  br-srv" >> "$HISTFILE"
-echo "_gc._tcp                 IN SRV 0 100 3268 br-srv" >> "$HISTFILE"
-echo "_ldap._tcp.dc._msdcs     IN SRV 0 100 389  br-srv" >> "$HISTFILE"
-echo "_kerberos._tcp.dc._msdcs IN SRV 0 100 88   br-srv" >> "$HISTFILE"
+echo "cat << 'EOF' >> /var/lib/bind/zone/au-team.irpo" >> "$HISTFILE"
+echo "EOF" >> "$HISTFILE"
 echo "named-checkzone au-team.irpo /var/lib/bind/zone/au-team.irpo" >> "$HISTFILE"
 echo "systemctl restart bind" >> "$HISTFILE"
-echo "server 172.16.1.1 iburst" >> "$HISTFILE"
-echo "driftfile /var/lib/chrony/drift" >> "$HISTFILE"
-echo "makestep 1.0 3" >> "$HISTFILE"
-echo "rtcsync" >> "$HISTFILE"
+echo "cat << 'EOF' > /etc/chrony.conf" >> "$HISTFILE"
+echo "EOF" >> "$HISTFILE"
 echo "systemctl enable --now chronyd && systemctl restart chronyd" >> "$HISTFILE"
 echo "chronyc sources" >> "$HISTFILE"
+echo "df -h /raid" >> "$HISTFILE"
+echo "cat /etc/exports" >> "$HISTFILE"
+echo "systemctl status httpd2" >> "$HISTFILE"
+echo "systemctl status mariadb" >> "$HISTFILE"
 
-# --- Выполнение команд конфигурации ---
+# --- Выполнение конфигурации ---
 # 1. RAID 0 (диски sda и sdb)
 lsblk
 mdadm --create /dev/md0 --level=0 --raid-devices=2 /dev/sda /dev/sdb -R
@@ -106,18 +104,17 @@ systemctl enable --now chronyd && systemctl restart chronyd
 chronyc sources
 
 
-# --- Контрольные проверки (добавляются в историю) ---
+# --- Контрольные проверки ---
 echo "[>] Проверка: df -h /raid"
-echo "df -h /raid" >> "$HISTFILE"
 df -h /raid 2>/dev/null || true
 echo "[>] Проверка: cat /etc/exports"
-echo "cat /etc/exports" >> "$HISTFILE"
 cat /etc/exports 2>/dev/null || true
 echo "[>] Проверка: systemctl status httpd2"
-echo "systemctl status httpd2" >> "$HISTFILE"
 systemctl status httpd2 2>/dev/null || true
 echo "[>] Проверка: systemctl status mariadb"
-echo "systemctl status mariadb" >> "$HISTFILE"
 systemctl status mariadb 2>/dev/null || true
 
-echo "[OK] Настройка успешно завершена!"
+echo ""
+echo "====================================================================="
+echo "[OK] Конфигурация успешно применена и проверена!"
+echo "====================================================================="

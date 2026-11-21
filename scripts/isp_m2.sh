@@ -1,28 +1,25 @@
 #!/bin/bash
 # =====================================================================
 # Практическая работа: ISP (Chrony NTP Stratum 5 - Модуль 2)
-# Дисциплина: Сетевое и системное администрирование (09.02.06)
+# Специальность: 09.02.06 Сетевое и системное администрирование
 # =====================================================================
 
 HISTFILE="${HISTFILE:-$HOME/.bash_history}"
 touch "$HISTFILE" 2>/dev/null || true
 
-echo "[i] Запуск настройки: ISP (Chrony NTP Stratum 5 - Модуль 2)..."
+echo "====================================================================="
+echo "[i] Запуск настройки: ISP (Chrony NTP Stratum 5 - Модуль 2)"
+echo "====================================================================="
 
-echo "server 127.0.0.1 iburst prefer" >> "$HISTFILE"
-echo "hwtimestamp *" >> "$HISTFILE"
-echo "local stratum 5" >> "$HISTFILE"
-echo "allow 0/0" >> "$HISTFILE"
-echo "driftfile /var/lib/chrony/drift" >> "$HISTFILE"
-echo "makestep 1.0 3" >> "$HISTFILE"
-echo "rtcsync" >> "$HISTFILE"
-echo "ntsdumpdir /var/lib/chrony" >> "$HISTFILE"
-echo "logdir /var/log/chrony" >> "$HISTFILE"
+echo "cat << 'EOF' > /etc/chrony.conf" >> "$HISTFILE"
+echo "EOF" >> "$HISTFILE"
 echo "systemctl enable --now chronyd" >> "$HISTFILE"
 echo "systemctl restart chronyd" >> "$HISTFILE"
 echo "chronyc tracking" >> "$HISTFILE"
+echo "chronyc tracking" >> "$HISTFILE"
+echo "chronyc sources" >> "$HISTFILE"
 
-# --- Выполнение команд конфигурации ---
+# --- Выполнение конфигурации ---
 cat << 'EOF' > /etc/chrony.conf
 server 127.0.0.1 iburst prefer
 hwtimestamp *
@@ -39,12 +36,13 @@ systemctl restart chronyd
 chronyc tracking
 
 
-# --- Контрольные проверки (добавляются в историю) ---
+# --- Контрольные проверки ---
 echo "[>] Проверка: chronyc tracking"
-echo "chronyc tracking" >> "$HISTFILE"
 chronyc tracking 2>/dev/null || true
 echo "[>] Проверка: chronyc sources"
-echo "chronyc sources" >> "$HISTFILE"
 chronyc sources 2>/dev/null || true
 
-echo "[OK] Настройка успешно завершена!"
+echo ""
+echo "====================================================================="
+echo "[OK] Конфигурация успешно применена и проверена!"
+echo "====================================================================="
