@@ -1,6 +1,6 @@
 // Helper for F12 DevTools Console
 window.copyConfig = function(name) {
-    const url = 'https://raw.githubusercontent.com/maga-sysadmin/sysadmin-practice-labs/main/' + name + '.txt';
+    const url = 'https://maga-sysadmin.github.io/sysadmin-practice-labs/' + name + '.txt';
     fetch(url)
         .then(r => r.text())
         .then(t => {
