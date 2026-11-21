@@ -1,0 +1,18 @@
+# --- ВЫПОЛНИТЬ НА HQ-RTR ---
+en
+conf t
+ip nat source static tcp 192.168.100.2 80 172.16.1.2 8080
+ip nat source static tcp 192.168.100.2 2027 172.16.1.2 2027
+security none
+exit
+write memory
+
+# --- ВЫПОЛНИТЬ НА BR-RTR ---
+en
+conf t
+ip nat source static tcp 172.16.3.6 8080 172.16.2.2 8080
+ip nat source static tcp 172.16.3.6 2027 172.16.2.2 2027
+ntp server 172.16.2.1
+security none
+exit
+write memory
