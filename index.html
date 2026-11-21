@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proxmox Virtual Environment — Практический комплекс 09.02.06</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --surface-color: #1e1e1e;
+            --card-color: #252525;
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --success-color: #10b981;
+            --accent-color: #8b5cf6;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border-color: #374151;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 15px;
+            font-size: 14px;
+        }
+
+        .header {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .header-title h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-title p {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .quick-links {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .btn-link {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: white;
+            font-weight: 600;
+            text-align: center;
+            display: inline-block;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-pve1 { background-color: #1e40af; }
+        .btn-pve1:hover { background-color: #1d4ed8; }
+        .btn-pve2 { background-color: #065f46; }
+        .btn-pve2:hover { background-color: #047857; }
+        .btn-ideco { background-color: #5b21b6; }
+        .btn-ideco:hover { background-color: #6d28d9; }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 15px;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+        }
+
+        .tab-btn.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background-color: var(--card-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-info h3 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .card-info span {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action {
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-copy {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-copy:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-toggle {
+            background-color: #374151;
+            color: #e5e7eb;
+        }
+
+        .btn-toggle:hover {
+            background-color: #4b5563;
+        }
+
+        pre {
+            background-color: #181818;
+            padding: 14px;
+            overflow-x: auto;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 12.5px;
+            line-height: 1.45;
+            color: #e2e8f0;
+            border-top: 1px solid #2d3748;
+            max-height: 380px;
+        }
+
+        .guide-box {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            white-space: pre-wrap;
+            font-family: Consolas, "Courier New", monospace;
+            line-height: 1.5;
+            color: #e2e8f0;
+        }
+
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--success-color);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            display: none;
+            z-index: 1000;
+            animation: fadeInOut 2.5s ease-in-out;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(10px); }
+            15% { opacity: 1; transform: translateY(0); }
+            85% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-title">
+            <h1>🎓 ЛАБОРАТОРНЫЙ ПРАКТИКУМ 09.02.06</h1>
+            <p>09.02.06 Сетевое и системное администрирование • КИМ 2027 • Типовые шаблоны и регламенты настройки</p>
+        </div>
+        <div>
+            <span style="background: #1e3a8a; color: #bfdbfe; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px;">
+                МЕТОДИЧЕСКИЙ СПРАВОЧНИК
+            </span>
+        </div>
+    </div>
+
+    <div class="quick-links">
+        <a href="simulator.html" class="btn-link" style="background: #1e3a8a; color: #93c5fd; border: 1px solid #3b82f6;">🖥️ Эмулятор терминала Proxmox VE</a>
+        <a href="https://10.111.1.5:8006" target="_blank" class="btn-link btn-pve1">🌐 Proxmox 10.111.1.5 (Модуль 1)</a>
+        <a href="https://10.111.1.6:8006" target="_blank" class="btn-link btn-pve2">🌐 Proxmox 10.111.1.6 (Модуль 2 / 3)</a>
+        <a href="https://172.16.3.2:8443" target="_blank" class="btn-link btn-ideco">🛡️ Ideco NGFW Web (172.16.3.2:8443)</a>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('m1', this)">🚀 Модуль 1 (Сетевая инфраструктура)</button>
+        <button class="tab-btn" onclick="switchTab('m2', this)">📦 Модуль 2 (Сервисы и Домен)</button>
+        <button class="tab-btn" onclick="switchTab('m3', this)">🔒 Модуль 3 (Безопасность и Бэкап)</button>
+        <button class="tab-btn" onclick="switchTab('ideco', this)">🛡️ Инструкция Ideco NGFW</button>
+        <button class="tab-btn" onclick="switchTab('check', this)">✅ Чек-лист проверки баллов</button>
+    </div>
+
+    <!-- МОДУЛЬ 1 -->
+    <div id="m1" class="tab-content active">
+        <!-- 1. ISP -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-info">
+                    <h3>1. ISP (ALT Linux - Шлюз провайдера)</h3>
+                    <span>ALT Linux • Адресация ens19/ens20, ip_forward=1, NAT masquerade, iptables</span>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-isp', 'ISP')">📋 Скопировать</button>
+                    <button class="btn-action btn-toggle" onclick="toggleCode('code-isp')">👁 Код</button>
+                </div>
+            </div>
+            <pre id="code-isp">hostnamectl set-hostname isp
+timedatectl set-timezone Europe/Moscow
+mkdir -p /etc/net/ifaces/ens19
+mkdir -p /etc/net/ifaces/ens20
+
+cat << 'EOF' > /etc/net/ifaces/ens18/options
+TYPE=eth
+BOOTPROTO=dhcp
+DISABLED=no
+EOF
+
+cat << 'EOF' > /etc/net/ifaces/ens19/options
+TYPE=eth
+BOOTPROTO=static
+DISABLED=no
+EOF
+
+cp /etc/net/ifaces/ens19/options /etc/net/ifaces/ens20/options
+echo "172.16.1.1/28" > /etc/net/ifaces/ens19/ipv4address
+echo "172.16.2.1/28" > /etc/net/ifaces/ens20/ipv4address
+
+cat << 'EOF' >> /etc/net/sysctl.conf
+net.ipv4.ip_forward = 1
+EOF
+
+sysctl -p /etc/net/sysctl.conf
+systemctl restart network
+
+apt-get update && apt-get install -y iptables tzdata
+iptables -t nat -A POSTROUTING -s 172.16.1.0/28 -o ens18 -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 172.16.2.0/28 -o ens18 -j MASQUERADE
+iptables-save > /etc/sysconfig/iptables
+systemctl enable --now iptables
+ip a</pre>
+        </div>
+
+        <!-- 2. HQ-RTR -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-info">
+                    <h3>2. HQ-RTR (EcoRouter Главного офиса)</h3>
+                    <span>EcoRouter CLI • OSPF, GRE туннель к филиалу, VLAN 100/200/999, NAT, DHCP</span>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-hqrtr', 'HQ-RTR')">📋 Скопировать</button>
+                    <button class="btn-action btn-toggle" onclick="toggleCode('code-hqrtr')">👁 Код</button>
+                </div>
+            </div>
+            <pre id="code-hqrtr">en
+conf t
+hostn hq-rtr
+ip domain-n au-team.irpo
+ntp time utc+3
+user net_admin
+pa P@ssw0rd
+role admin
+ex
+ip r 0.0.0.0/0 172.16.1.1
+int isp
+ip add 172.16.1.2/28
+ex
+port te0
+service-instance te0/isp
+en un
+co ip int isp
+ex
+ex
+int vl100
+ip add 192.168.100.1/27
+ex
+int vl200
+ip add 192.168.200.1/28
+ex
+int vl999
+ip add 192.168.99.1/29
+ex
+port te1
+service-instance te1/vl100
+encapsulation dot1q 100 exact
+rewrite pop 1
+connect ip interface vl100
+ex
+service-instance te1/vl200
+encapsulation dot1q 200 exact
+rewrite pop 1
+connect ip interface vl200
+ex
+service-instance te1/vl999
+encapsulation dot1q 999 exact
+rewrite pop 1
+connect ip interface vl999
+ex
+ex
+int tunnel.0
+ip add 10.10.10.1/30
+ip tu 172.16.1.2 172.16.2.2 mo gre
+ex
+router ospf 1
+ospf router-id 10.10.10.1
+passive-interface default
+no passive-interface tunnel.0
+network 10.10.10.0/30 area 0
+network 192.168.100.0/27 area 0
+network 192.168.200.0/28 area 0
+network 192.168.99.0/29 area 0
+ex
+int tunnel.0
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 P@ssw0rd
+ex
+int isp
+ip n o
+int vl100
+ip n i
+int vl200
+ip n i
+int vl999
+ip nat i
+ex
+ip nat p VLAN100 192.168.100.1-192.168.100.30
+ip nat p VLAN200 192.168.200.1-192.168.200.14
+ip nat p VLAN999 192.168.99.1-192.168.99.6
+ip nat so d i p VLAN100 o i isp
+ip nat so d i p VLAN200 o i isp
+ip nat so d i p VLAN999 o i isp
+ip po VLAN200 1
+ra 192.168.200.2-192.168.200.14
+ex
+ex
+dhcp-s 1
+mask 28
+po VLAN200 1
+ga 192.168.200.1
+dns 192.168.100.2
+domain-n au-team.irpo
+ex
+exit
+int vl200
+dhcp-server 1
+ex
+write</pre>
+        </div>
+
+        <!-- 3. BR-RTR -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-info">
+                    <h3>3. BR-RTR (EcoRouter Филиала)</h3>
+                    <span>EcoRouter CLI • OSPF, GRE туннель, стык с Ideco NGFW (172.16.3.1/30)</span>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-brrtr', 'BR-RTR')">📋 Скопировать</button>
+                    <button class="btn-action btn-toggle" onclick="toggleCode('code-brrtr')">👁 Код</button>
+                </div>
+            </div>
+            <pre id="code-brrtr">en
+conf t
+hostname br-rtr
+ip domain-name au-team.irpo
+ntp timezone utc+3
+username net_admin
+password P@ssw0rd
+role admin
+ex
+ip route 0.0.0.0/0 172.16.2.1
+int isp
+ip address 172.16.2.2/28
+ex
+port te0
+service-instance te0/isp
+encapsulation untagged
+connect ip interface isp
+ex
+ex
+int fw
+ip address 172.16.3.1/30
+ex
+port te1
+service-instance te1/fw
+encapsulation untagged
+connect ip interface fw
+ex
+ex
+int tunnel.0
+ip address 10.10.10.2/30
+ip tunnel 172.16.2.2 172.16.1.2 mode gre
+ex
+router ospf 1
+ospf router-id 10.10.10.2
+passive-interface isp
+network 172.16.3.0/30 area 0
+network 10.10.10.0/30 area 0
+ex
+int tunnel.0
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 P@ssw0rd
+ex
+int isp
+ip nat outside
+int fw
+ip nat inside
+ex
+ip nat pool FW 172.16.3.1-172.16.3.6
+ip nat source dynamic inside-to-outside pool FW overload interface isp
+write
+do sh ip ospf nei</pre>
+        </div>
+
+        <!-- 4. BR-FW-CLI -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-info">
+                    <h3>4. BR-FW (Ideco NGFW - Первичная консоль)</h3>
+                    <span>Ideco Console • admin / P@ssw0rd1234, смена пароля и настройка IP шлюза</span>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-fwcli', 'BR-FW')">📋 Скопировать</button>
+                    <button class="btn-action btn-toggle" onclick="toggleCode('code-fwcli')">👁 Код</button>
+                </div>
+            </div>
+            <pre id="code-fwcli"># 1. Логин: admin / Пароль: P@ssw0rd1234
+# 2. Смена пароля (ввести 2 раза): P@ssw0rd1234
+# 3. После входа нажмите по очереди цифры меню:
+#    3 (Настройка сети) -> 3 (Интерфейсы) -> 4 (порт eth0_bc)
+#    Имя интерфейса: br-rtr -> 2 -> 1 -> 2 -> IP: 172.16.3.2/30 -> 1 (Сохранить)
+# 4. Нажмите "c" для выхода в главное меню, затем:
+#    9 (Командная строка Bash)
+# В Bash выполните:
+ip route add 0.0.0.0/0 via 172.16.3.1
+ping -c 2 172.16.3.1
+exit</pre>
+        </div>
+
+        <!-- 5. HQ-SRV -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-info">
+                    <h3>5. HQ-SRV (DNS BIND au-team.irpo & Защита SSH)</h3>
+                    <span>ALT Linux • Зоны au-team.irpo, PTR реверсы, SSH порт 2027, баннер</span>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-hqsrv', 'HQ-SRV')">📋 Скопировать</button>
+                    <button class="btn-action btn-toggle" onclick="toggleCode('code-hqsrv')">👁 Код</button>
+                </div>
+            </div>
+            <pre id="code-hqsrv">hostnamectl set-hostname hq-srv.au-team.irpo
+timedatectl set-timezone Europe/Moscow
+echo "192.168.100.2/27" > /etc/net/ifaces/ens18/ipv4address
+echo "default via 192.168.100.1" > /etc/net/ifaces/ens18/ipv4route
+echo "nameserver 95.167.167.95" > /etc/net/ifaces/ens18/resolv.conf
+systemctl restart network
+
+apt-get update && apt-get install -y bind bind-utils
+
+cat << 'EOF' > /etc/bind/local.conf
+zone "au-team.irpo" {
+    type master;
+    file "au-team.irpo";
+};
+zone "100.168.192.in-addr.arpa" {
+    type master;
+    file "100.168.192.rev";
+};
+zone "3.16.172.in-addr.arpa" {
+    type master;
+    file "3.16.172.rev";
+};
+EOF
+
+cat << 'EOF' > /var/lib/bind/zone/au-team.irpo
+$TTL 1D
+@       IN SOA  au-team.irpo. root.au-team.irpo. (
+                                2026052500  ; serial
+                                1D      ; refresh
+                                1H      ; retry
+                                1W      ; expire
+                                3H      ; minimum
+                )
+        IN NS   au-team.irpo.
+        IN A    192.168.100.2
+hq-srv  IN A    192.168.100.2
+br-rtr  IN A    172.16.3.1
+br-fw   IN A    172.16.3.2
+br-fw   IN A    172.16.3.5
+hq-cli  IN A    192.168.200.2
+br-srv  IN A    172.16.3.6
+docker  IN A    172.16.1.1
+web     IN A    172.16.2.1
+hq-rtr  IN A    192.168.100.1
+hq-rtr  IN A    192.168.200.1
+hq-rtr  IN A    192.168.99.1
+EOF
+
+cat << 'EOF' > /var/lib/bind/zone/100.168.192.rev
+$TTL 1D
+@       IN SOA  au-team.irpo. root.au-team.irpo. (
+                                2026052500  ; serial
+                                1D      ; refresh
+                                1H      ; retry
+                                1W      ; expire
+                                3H      ; minimum
+                )
+        IN NS   au-team.irpo.
+2       IN PTR  hq-srv.au-team.irpo.
+EOF
+
+cat << 'EOF' > /var/lib/bind/zone/3.16.172.rev
+$TTL 1D
+@       IN SOA  au-team.irpo. root.au-team.irpo. (
+                                2026052500  ; serial
+                                1D      ; refresh
+                                1H      ; retry
+                                1W      ; expire
+                                3H      ; minimum
+                )
+        IN NS   au-team.irpo.
+6       IN PTR  br-srv.au-team.irpo.
+EOF
+
+chown root:named /var/lib/bind/zone/*
+rm -f /etc/bind/rndc.key
+
+cat << 'EOF' > /etc/bind/named.conf
+include "/etc/bind/options.conf";
+include "/etc/bind/local.conf";
+EOF
+
+cat << 'EOF' > /etc/bind/options.conf
+options {
+    listen-on { 192.168.100.2; 127.0.0.1; };
+    listen-on-v6 { none; };
+    forwarders { 95.167.167.95; 77.88.8.8; };
+    allow-query { any; };
+    allow-recursion { any; };
+};
+EOF
+
+named-checkconf && systemctl enable --now bind.service
+echo "search au-team.irpo" > /etc/net/ifaces/ens18/resolv.conf
+echo "nameserver 192.168.100.2" >> /etc/net/ifaces/ens18/resolv.conf
+systemctl restart network
+systemctl restart bind.service
+
+useradd -u 2027 -G wheel sshuser 2>/dev/null || true
+echo "sshuser:P@ssw0rd" | chpasswd
+echo "sshuser ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/sshuser
+chmod 0400 /etc/sudoers.d/sshuser
+
+cat << 'EOF' >> /etc/openssh/sshd_config
+Port 2027
+AllowUsers sshuser
+Banner /etc/openssh/banner
+MaxAuthTries 2
+EOF
+echo "Authorized access only" > /etc/openssh/banner
+systemctl restart sshd && systemctl enable sshd</pre>
+        </div>
+
+        <!-- 6. BR-SRV -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-info">
+                    <h3>6. BR-SRV (ALT Linux Сервер филиала)</h3>
+                    <span>ALT Linux • Статика 172.16.3.6/30, шлюз 172.16.3.5 (Ideco), SSH 2027</span>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-brsrv', 'BR-SRV')">📋 Скопировать</button>
+                    <button class="btn-action btn-toggle" onclick="toggleCode('code-brsrv')">👁 Код</button>
+                </div>
+            </div>
+            <pre id="code-brsrv">hostnamectl set-hostname br-srv.au-team.irpo
+timedatectl set-timezone Europe/Moscow
+echo "172.16.3.6/30" > /etc/net/ifaces/ens18/ipv4address
+echo "default via 172.16.3.5" > /etc/net/ifaces/ens18/ipv4route
+echo "search au-team.irpo" > /etc/net/ifaces/ens18/resolv.conf
+echo "nameserver 192.168.100.2" >> /etc/net/ifaces/ens18/resolv.conf
+systemctl restart network
+
+useradd -u 2027 -G wheel sshuser 2>/dev/null || true
+echo "sshuser:P@ssw0rd" | chpasswd
+echo "sshuser ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/sshuser
+chmod 0400 /etc/sudoers.d/sshuser
+
+cat << 'EOF' >> /etc/openssh/sshd_config
+Port 2027
+AllowUsers sshuser
+Banner /etc/openssh/banner
+MaxAuthTries 2
+EOF
+echo "Authorized access only" > /etc/openssh/banner
+systemctl restart sshd && systemctl enable sshd
+ping -c 3 172.16.3.5</pre>
+        </div>
+
+        <!-- 7. HQ-CLI -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-info">
+                    <h3>7. HQ-CLI (Рабочая станция администратора)</h3>
+                    <span>Linux Client • Получение DHCP VLAN 200, хостнейм, проверка маршрутов</span>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-hqcli', 'HQ-CLI')">📋 Скопировать</button>
+                    <button class="btn-action btn-toggle" onclick="toggleCode('code-hqcli')">👁 Код</button>
+                </div>
+            </div>
+            <pre id="code-hqcli">nmcli con del Wired_connection_1 2>/dev/null || true
+nmcli con add type ethernet con-name toRTR ifname ens18 ipv4.method auto
+nmcli con up toRTR
+hostnamectl set-hostname hq-cli.au-team.irpo
+timedatectl set-timezone Europe/Moscow
+ip a
+ping -c 3 192.168.200.1
+ssh -p 2027 sshuser@192.168.100.2</pre>
+        </div>
+    </div>
+
+    <!-- МОДУЛЬ 2 -->
+    <div id="m2" class="tab-content">
+        <!-- 1. ISP Chrony -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-info">
+                    <h3>1. ISP (Chrony NTP сервер - Stratum 5)</h3>
+                    <span>ALT Linux • Задание 4: chrony сервер точного времени stratum 5</span>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-m2-isp', 'ISP-NTP')">📋 Скопировать</button>
+                    <button class="btn-action btn-toggle" onclick="toggleCode('code-m2-isp')">👁 Код</button>
+                </div>
+            </div>
+            <pre id="code-m2-isp">cat << 'EOF' > /etc/chrony.conf
+server 127.0.0.1 iburst prefer
+hwtimestamp *
+local stratum 5
+allow 0/0
+driftfile /var/lib/chrony/drift
+makestep 1.0 3
+rtcsync
+ntsdumpdir /var/lib/chrony
+logdir /var/log/chrony
+EOF
+systemctl enable --now chronyd
+systemctl restart chronyd
+chronyc tracking</pre>
+        </div>
+
+        <!-- 2. HQ-SRV Services -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-info">
+                    <h3>2. HQ-SRV (RAID 0 + NFS + LAMP Web + DNS SRV)</h3>
+                    <span>ALT Linux • Задания 1, 2, 3, 7: /raid/nfs, Apache2+MariaDB, SRV-записи</span>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-m2-hqsrv', 'HQ-SRV-SERVICES')">📋 Скопировать</button>
+                    <button class="btn-action btn-toggle" onclick="toggleCode('code-m2-hqsrv')">👁 Код</button>
+                </div>
+            </div>
+            <pre id="code-m2-hqsrv"># 1. RAID 0 (диски sda и sdb)
+lsblk
+mdadm --create /dev/md0 --level=0 --raid-devices=2 /dev/sda /dev/sdb -R
+mdadm --detail --scan > /etc/mdadm.conf
+echo -e "n\np\n1\n\n\nw" | fdisk /dev/md0
+mkfs.ext4 /dev/md0p1
+mkdir -p /raid
+echo '/dev/md0p1  /raid  ext4  defaults  0  0' >> /etc/fstab
+systemctl daemon-reload && mount -a
+df -h /raid
+
+# 2. NFS сервер
+apt-get update && apt-get install -y nfs-server
+mkdir -p /raid/nfs && chmod 777 /raid/nfs
+echo '/raid/nfs 192.168.200.0/28(rw,sync,no_subtree_check,no_root_squash)' > /etc/exports
+systemctl enable --now nfs-server
+exportfs -ra && exportfs -v
+
+# 3. Веб-приложение (Apache2 + PHP + MariaDB)
+apt-get install -y apache2 apache2-mod_php8.2 php8.2-mysqlnd-mysqli mariadb-server
+systemctl enable --now mariadb
+mkdir -p /mnt/add
+mount -o ro /dev/sr1 /mnt/add 2>/dev/null || true
+mariadb -e "CREATE DATABASE webdb; CREATE USER 'web'@'localhost' IDENTIFIED BY 'P@ssw0rd'; GRANT ALL PRIVILEGES ON webdb.* TO 'web'@'localhost'; FLUSH PRIVILEGES;"
+mariadb webdb < /mnt/add/web/dump.sql 2>/dev/null || true
+cp /mnt/add/web/index.php /mnt/add/web/logo.png /var/www/html/ 2>/dev/null || true
+rm -f /var/www/html/index.html
+systemctl enable --now httpd2 && systemctl restart httpd2
+curl -s localhost | grep title
+
+# 4. SRV записи для Samba AD
+cat << 'EOF' >> /var/lib/bind/zone/au-team.irpo
+_ldap._tcp               IN SRV 0 100 389  br-srv
+_kerberos._tcp           IN SRV 0 100 88   br-srv
+_kerberos._udp           IN SRV 0 100 88   br-srv
+_kpasswd._tcp            IN SRV 0 100 464  br-srv
+_kpasswd._udp            IN SRV 0 100 464  br-srv
+_gc._tcp                 IN SRV 0 100 3268 br-srv
+_ldap._tcp.dc._msdcs     IN SRV 0 100 389  br-srv
+_kerberos._tcp.dc._msdcs IN SRV 0 100 88   br-srv
+EOF
+named-checkzone au-team.irpo /var/lib/bind/zone/au-team.irpo
+systemctl restart bind
+
+# 5. Chrony NTP клиент
+cat << 'EOF' > /etc/chrony.conf
+server 172.16.1.1 iburst
+driftfile /var/lib/chrony/drift
+makestep 1.0 3
+rtcsync
+EOF
+systemctl enable --now chronyd && systemctl restart chronyd
+chronyc sources</pre>
+        </div>
+
+        <!-- 3. ROUTERS PORTFORWARD -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-info">
+                    <h3>3. HQ-RTR & BR-RTR (Проброс портов + NTP)</h3>
+                    <span>EcoRouter CLI • Задание 8: NAT проброс портов 8080/2027 и security none</span>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-m2-rtrs', 'ROUTERS')">📋 Скопировать</button>
+                    <button class="btn-action btn-toggle" onclick="toggleCode('code-m2-rtrs')">👁 Код</button>
+                </div>
+            </div>
+            <pre id="code-m2-rtrs"># --- ВЫПОЛНИТЬ НА HQ-RTR ---
+en
+conf t
+ip nat source static tcp 192.168.100.2 80 172.16.1.2 8080
+ip nat source static tcp 192.168.100.2 2027 172.16.1.2 2027
+security none
+exit
+write memory
+
+# --- ВЫПОЛНИТЬ НА BR-RTR ---
+en
+conf t
+ip nat source static tcp 172.16.3.6 8080 172.16.2.2 8080
+ip nat source static tcp 172.16.3.6 2027 172.16.2.2 2027
+ntp server 172.16.2.1
+security none
+exit
+write memory</pre>
+        </div>
+
+        <!-- 4. BR-SRV Services -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-info">
+                    <h3>4. BR-SRV (Samba AD DC + Docker + Ansible)</h3>
+                    <span>ALT Linux • Задания 1, 4, 5, 6: Домен au-team.irpo, контейнеры, ansible</span>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-m2-brsrv', 'BR-SRV-SERVICES')">📋 Скопировать</button>
+                    <button class="btn-action btn-toggle" onclick="toggleCode('code-m2-brsrv')">👁 Код</button>
+                </div>
+            </div>
+            <pre id="code-m2-brsrv"># 1. Samba AD DC пользователи и парольная политика
+samba-tool group add hq 2>/dev/null || true
+for i in {1..5}; do samba-tool user add hquser$i P@ssw0rd; samba-tool group addmembers hq hquser$i; done
+samba-tool domain passwordsettings set --min-pwd-length=8
+samba-tool domain passwordsettings set --account-lockout-threshold=5
+samba-tool domain passwordsettings show
+
+# 2. Chrony NTP клиент
+cat << 'EOF' > /etc/chrony.conf
+server 172.16.2.1 iburst
+driftfile /var/lib/chrony/drift
+makestep 1.0 3
+rtcsync
+EOF
+systemctl enable --now chronyd && systemctl restart chronyd
+
+# 3. Docker Compose
+cp /etc/resolv.conf /root/resolv.conf.bak
+echo 'nameserver 172.16.3.5' > /etc/resolv.conf
+apt-get update && apt-get install -y docker-engine docker-compose ansible sshpass
+systemctl enable --now docker
+mkdir -p /mnt/add
+mount -o ro /dev/sr1 /mnt/add 2>/dev/null || true
+docker load -i /mnt/add/docker/site_latest.tar 2>/dev/null || true
+docker load -i /mnt/add/docker/mariadb_latest.tar 2>/dev/null || true
+cp /mnt/add/compose.yaml /root/ 2>/dev/null || true
+sed -i 's/192.168.3.10/db/g' /root/compose.yaml 2>/dev/null || true
+cd /root && docker compose up -d
+
+# 4. Ansible автоматизация
+cat << 'EOF' > /etc/ansible/hosts
+[hq]
+hq-srv ansible_host=192.168.100.2 ansible_port=2027
+hq-cli ansible_host=192.168.200.2
+
+[hq:vars]
+ansible_user=sshuser
+ansible_password=P@ssw0rd
+
+[routers]
+hq-rtr ansible_host=10.10.10.1
+br-rtr ansible_host=172.16.3.1
+
+[routers:vars]
+ansible_user=net_admin
+ansible_password=P@ssw0rd
+ansible_connection=network_cli
+ansible_network_os=ios
+ansible_network_cli_ssh_type=paramiko
+EOF
+
+cat << 'EOF' > /etc/ansible/ansible.cfg
+[defaults]
+inventory = /etc/ansible/hosts
+host_key_checking = False
+interpreter_python = auto_silent
+EOF
+
+\cp -f /root/resolv.conf.bak /etc/resolv.conf
+cd /etc/ansible && ansible all -m ping</pre>
+        </div>
+
+        <!-- 5. HQ-CLI Client -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-info">
+                    <h3>5. HQ-CLI (NFS авто-маунт + Домен AD + Yandex)</h3>
+                    <span>Linux Client • Задания 1, 3, 4, 9: fstab nfs, ввод в au-team.irpo, sudo для hq</span>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-m2-hqcli', 'HQ-CLI-CLIENT')">📋 Скопировать</button>
+                    <button class="btn-action btn-toggle" onclick="toggleCode('code-m2-hqcli')">👁 Код</button>
+                </div>
+            </div>
+            <pre id="code-m2-hqcli"># 1. Пользователь sshuser для Ansible
+useradd -m sshuser 2>/dev/null || true
+echo 'sshuser:P@ssw0rd' | chpasswd
+usermod -aG wheel sshuser
+echo 'sshuser ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/sshuser
+chmod 0400 /etc/sudoers.d/sshuser
+systemctl enable --now sshd
+
+# 2. Chrony NTP
+cat << 'EOF' > /etc/chrony.conf
+server 172.16.1.1 iburst
+driftfile /var/lib/chrony/drift
+makestep 1.0 3
+rtcsync
+EOF
+systemctl restart chronyd
+
+# 3. Автомонтирование NFS в /etc/fstab
+mkdir -p /mnt/nfs
+grep -q '/mnt/nfs' /etc/fstab || echo '192.168.100.2:/raid/nfs /mnt/nfs nfs defaults,_netdev,x-systemd.automount 0 0' >> /etc/fstab
+systemctl daemon-reload && systemctl restart remote-fs.target
+ls -la /mnt/nfs
+
+# 4. Ввод в домен Samba AD
+system-auth write ad au-team.irpo hq-cli au-team 'administrator' 'P@ssw0rd'
+id hquser1
+sed -i '/^pool AU-TEAM.IRPO/d' /etc/chrony.conf
+systemctl restart chronyd
+control sudo public
+echo '%hq ALL=(ALL) /usr/bin/cat, /usr/bin/grep, /usr/bin/id' > /etc/sudoers.d/hq
+chmod 0400 /etc/sudoers.d/hq
+
+# 5. Яндекс Браузер
+apt-get update && apt-get install -y yandex-browser-stable</pre>
+        </div>
+    </div>
+
+    <!-- МОДУЛЬ 3 -->
+    <div id="m3" class="tab-content">
+        <!-- 1. BR-SRV IMPORT -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-info">
+                    <h3>1. BR-SRV (Импорт пользователей из Users.csv)</h3>
+                    <span>ALT Linux • Задание 1: Автоматический парсинг CSV и создание OU/пользователей</span>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-m3-import', 'BR-SRV-IMPORT')">📋 Скопировать</button>
+                    <button class="btn-action btn-toggle" onclick="toggleCode('code-m3-import')">👁 Код</button>
+                </div>
+            </div>
+            <pre id="code-m3-import">mkdir -p /mnt/add
+mount -o ro /dev/sr1 /mnt/add 2>/dev/null || true
+
+cat << 'EOF' > /root/import.sh
+#!/bin/bash
+csv=${1:-/mnt/add/Users.csv}
+tail -n +2 "$csv" | tr -d '\r' > /tmp/users.csv
+cut -d';' -f5 /tmp/users.csv | sort -u | while read -r ou; do
+  samba-tool ou add "OU=$ou" 2>/dev/null || true
+done
+while IFS=';' read -r user name surname pass ou; do
+  samba-tool user add "$user" "$pass" --userou="OU=$ou" --given-name="$name" --surname="$surname" 2>/dev/null || true
+done < /tmp/users.csv
+EOF
+chmod +x /root/import.sh
+/root/import.sh
+samba-tool user list</pre>
+        </div>
+
+        <!-- 2. ISP PROXY -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-info">
+                    <h3>2. ISP (Nginx Reverse Proxy + Basic Auth + SSL)</h3>
+                    <span>ALT Linux • Задания 2, 4: Проксирование web/docker, HTTPS SSL, Basic Auth</span>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-m3-proxy', 'ISP-PROXY')">📋 Скопировать</button>
+                    <button class="btn-action btn-toggle" onclick="toggleCode('code-m3-proxy')">👁 Код</button>
+                </div>
+            </div>
+            <pre id="code-m3-proxy">apt-get update && apt-get install -y nginx apache2-utils
+systemctl enable --now nginx
+
+# Basic Auth
+htpasswd -bc /etc/nginx/htpasswd WEB P@ssw0rd
+htpasswd -b /etc/nginx/htpasswd DOCKER P@ssw0rd
+
+mkdir -p /etc/nginx/ssl
+scp -P 2027 'sshuser@172.16.1.2:/home/sshuser/ssl/*' /etc/nginx/ssl/ 2>/dev/null || true
+
+cat << 'EOF' > /etc/nginx/sites-available.d/proxy.conf
+server {
+    listen 80;
+    server_name web.au-team.irpo docker.au-team.irpo;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name web.au-team.irpo;
+    ssl_certificate /etc/nginx/ssl/web.crt;
+    ssl_certificate_key /etc/nginx/ssl/web.key;
+
+    location / {
+        auth_basic "Restricted";
+        auth_basic_user_file /etc/nginx/htpasswd;
+        proxy_pass http://172.16.1.2:8080;
+        proxy_set_header Host $host;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name docker.au-team.irpo;
+    ssl_certificate /etc/nginx/ssl/docker.crt;
+    ssl_certificate_key /etc/nginx/ssl/docker.key;
+
+    location / {
+        auth_basic "Restricted";
+        auth_basic_user_file /etc/nginx/htpasswd;
+        proxy_pass http://172.16.2.2:8080;
+        proxy_set_header Host $host;
+    }
+}
+EOF
+
+ln -sf /etc/nginx/sites-available.d/proxy.conf /etc/nginx/sites-enabled.d/
+nginx -t && systemctl restart nginx</pre>
+        </div>
+
+        <!-- 3. HQ-SRV SECURITY -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-info">
+                    <h3>3. HQ-SRV (Atop + Cups-PDF + Fail2ban + Bacula)</h3>
+                    <span>ALT Linux • Задания 5, 6, 8, 9: Мониторинг atop, печать Cups, fail2ban SSH</span>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-action btn-copy" onclick="copyBlock('code-m3-sec', 'HQ-SRV-SEC')">📋 Скопировать</button>
+                    <button class="btn-action btn-toggle" onclick="toggleCode('code-m3-sec')">👁 Код</button>
+                </div>
+            </div>
+            <pre id="code-m3-sec"># 1. Atop (интервал 420 сек)
+apt-get update && apt-get install -y atop
+echo 'LOGINTERVAL=420' > /etc/default/atop
+systemctl enable --now atop && systemctl restart atop
+
+# 2. Cups-PDF принт-сервер
+apt-get install -y cups cups-pdf
+systemctl enable --now cups
+cupsctl --remote-any --share-printers
+lpadmin -p Cups-PDF -o printer-is-shared=true
+lpadmin -d Cups-PDF
+systemctl restart cups
+
+# 3. Fail2ban для SSH
+apt-get install -y fail2ban python3-module-systemd iptables
+cat << 'EOF' > /etc/fail2ban/jail.d/sshd.local
+[sshd]
+enabled = true
+port = 2027
+filter = sshd
+logpath = /var/log/messages
+backend = systemd
+maxretry = 3
+findtime = 600
+bantime = 3600
+EOF
+systemctl enable --now fail2ban && systemctl restart fail2ban
+fail2ban-client status sshd
+
+# 4. Резервное копирование Bacula /etc
+echo "run job=hq-srv-etc yes" | bconsole 2>/dev/null || true
+echo "list jobs" | bconsole 2>/dev/null || true</pre>
+        </div>
+    </div>
+
+    <!-- IDECO GUIDE -->
+    <div id="ideco" class="tab-content">
+        <div class="guide-box">======================================================================
+               ИНСТРУКЦИЯ ПО ВЕБ-ИНТЕРФЕЙСУ IDECO NGFW
+                     Адрес: https://172.16.3.2:8443
+                     Логин: admin / Пароль: P@ssw0rd1234
+======================================================================
+
+1. СМЕНА ИМЕНИ СЕРВЕРА:
+   - В правом верхнем углу кликните по названию сервера -> значок "Карандаш".
+   - Введите: br-fw.au-team.irpo -> нажмите зелёную галочку.
+
+2. ОТКЛЮЧЕНИЕ ПЕРЕХВАТА DNS:
+   - Перейдите: Сервисы -> Защита и управление DNS -> Внешние DNS-серверы -> Настройки.
+   - Снимите галочку: "Перехват пользовательских DNS-запросов" -> Сохранить.
+
+3. ДОБАВЛЕНИЕ ИНТЕРФЕЙСА ДЛЯ СЕРВЕРА BR-SRV:
+   - Перейдите: Сервисы -> Сетевые интерфейсы -> Кнопка "+ Добавить" -> Ethernet.
+   - Настройки:
+     * Понятное имя:    br-srv
+     * Роль:            LAN (Локальная сеть)
+     * Физический порт: eth1_d7 (или второй свободный интерфейс)
+     * Режим:           Статический
+     * Адрес / маска:   172.16.3.5/30
+   - Нажмите "Добавить".
+
+4. НАСТРОЙКА OSPF МАРШРУТИЗАЦИИ:
+   - Перейдите: Маршрутизация -> OSPF.
+   - Вкладка "Дополнительные":
+     * Снимите все 3 галочки "Redistribute" -> Сохранить.
+   - Вкладка "Основные":
+     * Нажмите "+ Добавить": Интерфейс "br-rtr", Area "0", Вес "50" -> Добавить.
+     * Нажмите "+ Добавить": Интерфейс "br-srv", Area "0", Вес "50" -> Добавить.
+   - Включите главный переключатель OSPF вверху страницы.
+
+5. МАРШРУТ ПО УМОЛЧАНИЮ (DEFAULT ROUTE):
+   - Перейдите: Маршрутизация -> Статическая -> "+ Добавить".
+   - Настройки:
+     * Название:   default
+     * Назначение: Любой (0.0.0.0/0)
+     * Интерфейс:  br-rtr
+     * Шлюз:       172.16.3.1
+     * Приоритет:  1
+   - Нажмите "Добавить".
+======================================================================</div>
+    </div>
+
+    <!-- CHECKLIST -->
+    <div id="check" class="tab-content">
+        <div class="guide-box">======================================================================
+         ЧЕК-ЛИСТ ПРОВЕРКИ БАЛЛОВ ПО ОФИЦИАЛЬНОМУ КИМ 2027
+======================================================================
+
+МОДУЛЬ 1 (Связь и сеть):
+   [ ] С HQ-RTR пингуется ISP:           do ping 172.16.1.1
+   [ ] С BR-RTR пингуется ISP:           do ping 172.16.2.1
+   [ ] GRE туннель между роутерами:      do ping 10.10.10.1 (с BR-RTR)
+   [ ] OSPF соседство поднято:           do sh ip ospf nei (состояние FULL)
+   [ ] С клиента HQ-CLI пингуется шлюз:  ping 192.168.200.1
+   [ ] С клиента HQ-CLI пингуется DNS:   ping 192.168.100.2
+   [ ] С клиента HQ-CLI пингуется BR-SRV:ping 172.16.3.6
+   [ ] Прямой DNS резолв:                host hq-srv (ответ: 192.168.100.2)
+   [ ] Обратный DNS резолв (PTR):        host 192.168.100.2
+   [ ] SSH на нестандартном порту 2027:  ssh -p 2027 sshuser@192.168.100.2
+   [ ] Баннер "Authorized access only" при входе по SSH
+
+МОДУЛЬ 2 (Сервисы и Домен):
+   [ ] Chrony Stratum 5 на ISP:          chronyc tracking
+   [ ] RAID 0 смонтирован в /raid:       df -h /raid
+   [ ] NFS ресурс экспортирован:         exportfs -v
+   [ ] NFS смонтирован на HQ-CLI:        df -h /mnt/nfs
+   [ ] Веб-приложение LAMP открывается:  curl localhost | grep title
+   [ ] Домен au-team.irpo поднят:        samba-tool domain info 127.0.0.1
+   [ ] Пользователи hquser1..5 созданы:  samba-tool group listmembers hq
+   [ ] HQ-CLI введен в домен Samba:      id hquser1
+   [ ] Ansible пингует все узлы:         ansible all -m ping
+
+МОДУЛЬ 3 (Безопасность):
+   [ ] Импорт пользователей из CSV:      samba-tool user list
+   [ ] Nginx проксирует с Basic Auth:    curl -u WEB:P@ssw0rd https://web.au-team.irpo -k
+   [ ] Редирект HTTP -> HTTPS:           curl -I http://web.au-team.irpo
+   [ ] Интервал atop равен 420:          ps -eo cmd | grep atop
+   [ ] Принтер Cups-PDF расшарен:        lpstat -p
+   [ ] Демон Fail2ban активен для 2027:  fail2ban-client status sshd
+   [ ] Резервная копия Bacula создана:   bconsole (list jobs)</div>
+    </div>
+
+    <div id="toast">✅ Скопировано в буфер!</div>
+
+    <script>
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function toggleCode(id) {
+            const el = document.getElementById(id);
+            if (el.style.display === 'none') {
+                el.style.display = 'block';
+            } else {
+                el.style.display = 'none';
+            }
+        }
+
+        function copyBlock(id, title) {
+            const text = document.getElementById(id).innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`✅ Скопировано: [${title}]! Вставьте в xterm (Shift+Insert / Ctrl+Shift+V)`);
+            });
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 2500);
+        }
+    </script>
+</body>
+</html>

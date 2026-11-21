@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proxmox Virtual Environment</title>
+    <style>
+        :root {
+            --pve-header: #2b2b2b;
+            --pve-orange: #e57000;
+            --pve-dark: #1e1e1e;
+            --pve-sidebar: #242424;
+            --pve-border: #383838;
+            --pve-text: #e0e0e0;
+            --pve-active: #3a3a3a;
+            --term-bg: #0c0c0c;
+            --term-text: #cccccc;
+            --term-prompt: #22c55e;
+            --term-cursor: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--pve-dark);
+            color: var(--pve-text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Верхний бар Proxmox */
+        .pve-topbar {
+            height: 44px;
+            background-color: var(--pve-header);
+            border-bottom: 2px solid var(--pve-orange);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+        }
+
+        .pve-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pve-logo {
+            background-color: var(--pve-orange);
+            color: white;
+            font-weight: 900;
+            font-size: 14px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+        }
+
+        .pve-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .pve-badge {
+            background-color: #3b82f6;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .pve-top-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-exam-grade {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-exam-grade:hover {
+            background-color: #059669;
+            transform: scale(1.02);
+        }
+
+        .user-info {
+            font-size: 13px;
+            color: #a3a3a3;
+        }
+
+        /* Основная рабочая область (Сплит: Дерево слева + Консоль справа) */
+        .pve-main {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Левая панель - Дерево ВМ */
+        .pve-sidebar {
+            width: 250px;
+            background-color: var(--pve-sidebar);
+            border-right: 1px solid var(--pve-border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 10px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #888;
+            border-bottom: 1px solid var(--pve-border);
+        }
+
+        .vm-tree {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+
+        .tree-node {
+            padding: 8px 16px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .tree-node:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .tree-node.active {
+            background-color: var(--pve-active);
+            color: #ffffff;
+            font-weight: 600;
+            border-left: 3px solid var(--pve-orange);
+        }
+
+        .vm-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #22c55e;
+            box-shadow: 0 0 6px #22c55e;
+        }
+
+        /* Правая панель - Терминал xterm.js */
+        .pve-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #121212;
+            overflow: hidden;
+        }
+
+        /* Панель управления виртуальной машиной */
+        .vm-toolbar {
+            height: 48px;
+            background-color: #202020;
+            border-bottom: 1px solid var(--pve-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+        }
+
+        .vm-title-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .vm-title-status h2 {
+            font-size: 15px;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .vm-toolbar-btns {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .t-btn {
+            background-color: #333333;
+            color: #ddd;
+            border: 1px solid #444;
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .t-btn:hover {
+            background-color: #444;
+            color: #fff;
+        }
+
+        .t-btn-paste {
+            background-color: #1d4ed8;
+            border-color: #2563eb;
+            color: #fff;
+        }
+
+        .t-btn-paste:hover {
+            background-color: #2563eb;
+        }
+
+        .t-btn-clear {
+            background-color: #7f1d1d;
+            border-color: #991b1b;
+            color: #fca5a5;
+        }
+
+        .t-btn-clear:hover {
+            background-color: #991b1b;
+        }
+
+        /* Окно терминала (xterm.js simulation) */
+        .terminal-container {
+            flex: 1;
+            background-color: var(--term-bg);
+            padding: 12px 16px;
+            overflow-y: auto;
+            cursor: text;
+            font-family: "Consolas", "Courier New", monospace;
+            font-size: 13.5px;
+            line-height: 1.45;
+            color: var(--term-text);
+            position: relative;
+        }
+
+        .terminal-output {
+            white-space: pre-wrap;
+            word-break: break-all;
+            user-select: text;
+        }
+
+        .terminal-input-line {
+            display: flex;
+            align-items: center;
+            margin-top: 4px;
+        }
+
+        .terminal-prompt {
+            color: var(--term-prompt);
+            font-weight: bold;
+            margin-right: 6px;
+            white-space: nowrap;
+        }
+
+        .terminal-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #ffffff;
+            font-family: "Consolas", "Courier New", monospace;
+            font-size: 13.5px;
+            caret-color: var(--term-cursor);
+            user-select: text;
+        }
+
+        /* Модальное окно оценки (КИМ Грейдер) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-box {
+            background-color: #222222;
+            border: 1px solid var(--pve-border);
+            border-radius: 12px;
+            width: 700px;
+            max-width: 90%;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+        }
+
+        .modal-header {
+            padding: 16px 20px;
+            background-color: #1a1a1a;
+            border-bottom: 1px solid var(--pve-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 17px;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .grade-score-banner {
+            background-color: #1e3a8a;
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .grade-score-banner h1 {
+            font-size: 32px;
+            color: #60a5fa;
+            margin-bottom: 4px;
+        }
+
+        .grade-score-banner p {
+            font-size: 14px;
+            color: #bfdbfe;
+        }
+
+        .criteria-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .crit-item {
+            background-color: #2a2a2a;
+            padding: 10px 14px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .crit-status-pass {
+            color: #34d399;
+            font-weight: bold;
+        }
+
+        .crit-status-fail {
+            color: #f87171;
+            font-weight: bold;
+        }
+
+        .modal-footer {
+            padding: 12px 20px;
+            background-color: #1a1a1a;
+            border-top: 1px solid var(--pve-border);
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Верхний бар Proxmox -->
+    <div class="pve-topbar">
+        <div class="pve-brand">
+            <div class="pve-logo">PROXMOX</div>
+            <div class="pve-title">Virtual Environment 8.2-4</div>
+            <div class="pve-badge">ЛАБОРАТОРНЫЙ СТЕНД</div><a href="index.html" style="margin-left: 10px; color: #cbd5e1; text-decoration: none; font-size: 12px; background: #374151; padding: 4px 10px; border-radius: 4px;">📚 Справочник шаблонов</a>
+        </div>
+
+        <div class="pve-top-actions">
+            <button class="btn-exam-grade" onclick="openGraderModal()">
+                📊 Автоматическая проверка критериев
+            </button>
+            <div class="user-info">Пользователь: <b>student@pam</b> (10.111.1.5)</div>
+        </div>
+    </div>
+
+    <!-- Основная область -->
+    <div class="pve-main">
+        <!-- Дерево машин слева -->
+        <div class="pve-sidebar">
+            <div class="sidebar-header">Сервер: pve (10.111.1.5)</div>
+            <div class="vm-tree">
+                <div class="tree-node active" onclick="switchVM('isp', this)">
+                    <div class="vm-status-dot"></div>
+                    <span>101 (isp)</span>
+                </div>
+                <div class="tree-node" onclick="switchVM('hq-rtr', this)">
+                    <div class="vm-status-dot"></div>
+                    <span>102 (hq-rtr)</span>
+                </div>
+                <div class="tree-node" onclick="switchVM('br-rtr', this)">
+                    <div class="vm-status-dot"></div>
+                    <span>103 (br-rtr)</span>
+                </div>
+                <div class="tree-node" onclick="switchVM('br-fw', this)">
+                    <div class="vm-status-dot"></div>
+                    <span>104 (br-fw)</span>
+                </div>
+                <div class="tree-node" onclick="switchVM('hq-srv', this)">
+                    <div class="vm-status-dot"></div>
+                    <span>105 (hq-srv)</span>
+                </div>
+                <div class="tree-node" onclick="switchVM('br-srv', this)">
+                    <div class="vm-status-dot"></div>
+                    <span>106 (br-srv)</span>
+                </div>
+                <div class="tree-node" onclick="switchVM('hq-cli', this)">
+                    <div class="vm-status-dot"></div>
+                    <span>107 (hq-cli)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Консоль справа -->
+        <div class="pve-content">
+            <div class="vm-toolbar">
+                <div class="vm-title-status">
+                    <h2 id="vm-display-name">101 (isp) — Консоль (xterm.js)</h2>
+                    <span id="vm-os-tag" style="font-size: 11px; background: #374151; padding: 2px 8px; border-radius: 4px; color: #9ca3af;">ALT Linux</span>
+                </div>
+                <div class="vm-toolbar-btns">
+                    <button class="t-btn" id="btn-human-type" onclick="toggleSimulatedTyping()" style="background: #e63946; color: white; font-weight: bold;">⌨️ Авто-печать (270 CPM)</button>
+                    <button class="t-btn" onclick="autoApplySolution()" style="background: #2b7a4b; color: white;">⚡ Вставить решение</button>
+                    <button class="t-btn t-btn-clear" onclick="clearCurrentTerminal()">Очистить (clear)</button>
+                    <button class="t-btn" onclick="rebootCurrentVM()">Перезагрузить</button>
+                </div>
+            </div>
+
+            <!-- Область терминала -->
+            <div class="terminal-container" id="terminal-scroll" onclick="focusInput()">
+                <div class="terminal-output" id="terminal-output"></div>
+                <div class="terminal-input-line">
+                    <span class="terminal-prompt" id="terminal-prompt">[root@isp ~]#</span>
+                    <input type="text" class="terminal-input" id="terminal-input" autocomplete="off" spellcheck="false">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно оценки (Грейдер КИМ) -->
+    <div class="modal-overlay" id="grader-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>📊 Оценка выполнения Демонстрационного Экзамена</h3>
+                <button class="t-btn" onclick="closeGraderModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="grade-score-banner">
+                    <h1 id="total-score-val">27 / 27</h1>
+                    <p id="total-grade-val">Оценка: 5 (Отлично) • Все критерии выполнены</p>
+                </div>
+
+                <div class="criteria-list" id="criteria-list-container">
+                    <!-- Заполняется динамически -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="t-btn" onclick="closeGraderModal()">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Состояние виртуальных машин
+        const VMS = {
+            'isp': {
+                name: '101 (isp)',
+                os: 'ALT Linux Gateway',
+                prompt: '[root@isp ~]# ',
+                history: [
+                    'ALT Linux (Server Engine 10.1)',
+                    'Kernel 5.15.72-std-def-alt1 on an x86_64',
+                    'isp login: root (automatic login)',
+                    'Last login: Sat Nov 21 19:30:10 on ttyS0',
+                    ''
+                ],
+                state: { ip_forward: false, nat: false, ens19: false, ens20: false, chrony: false, nginx: false }
+            },
+            'hq-rtr': {
+                name: '102 (hq-rtr)',
+                os: 'EcoRouter CLI',
+                prompt: 'hq-rtr# ',
+                history: [
+                    'EcoRouter Software (ESR-1000)',
+                    'Technical Support: support@rdp.ru',
+                    'login: admin',
+                    'Password: *****',
+                    'hq-rtr>',
+                    'hq-rtr# '
+                ],
+                state: { mode: 'priv', ospf: false, gre: false, vlan100: false, vlan200: false, dhcp: false, nat: false }
+            },
+            'br-rtr': {
+                name: '103 (br-rtr)',
+                os: 'EcoRouter CLI',
+                prompt: 'br-rtr# ',
+                history: [
+                    'EcoRouter Software (ESR-1000)',
+                    'Technical Support: support@rdp.ru',
+                    'login: admin',
+                    'Password: *****',
+                    'br-rtr>',
+                    'br-rtr# '
+                ],
+                state: { mode: 'priv', ospf: false, gre: false, fw_link: false, nat: false }
+            },
+            'br-fw': {
+                name: '104 (br-fw)',
+                os: 'Ideco NGFW Console',
+                prompt: '[root@br-fw ~]# ',
+                history: [
+                    'Ideco NGFW 14.2.1-build-814',
+                    'Authorized access only',
+                    'Starting network configuration services...',
+                    'Ideco Console Ready.',
+                    ''
+                ],
+                state: { route: false, ip: false, ospf_web: false }
+            },
+            'hq-srv': {
+                name: '105 (hq-srv)',
+                os: 'ALT Linux Server',
+                prompt: '[root@hq-srv ~]# ',
+                history: [
+                    'ALT Linux (Server Engine 10.1)',
+                    'hq-srv.au-team.irpo login: root',
+                    'Last login: Sat Nov 21 19:35:00 on tty1',
+                    ''
+                ],
+                state: { bind: false, ssh_port: false, raid0: false, nfs: false, lamp: false, atop: false }
+            },
+            'br-srv': {
+                name: '106 (br-srv)',
+                os: 'ALT Linux Server',
+                prompt: '[root@br-srv ~]# ',
+                history: [
+                    'ALT Linux (Server Engine 10.1)',
+                    'br-srv.au-team.irpo login: root',
+                    'Last login: Sat Nov 21 19:36:12 on tty1',
+                    ''
+                ],
+                state: { ip: false, ssh_port: false, samba_ad: false, docker: false, ansible: false, csv_import: false }
+            },
+            'hq-cli': {
+                name: '107 (hq-cli)',
+                os: 'Linux Workstation',
+                prompt: '[user@hq-cli ~]$ ',
+                history: [
+                    'Linux Client Workstation',
+                    'Connected to network adapter ens18',
+                    ''
+                ],
+                state: { dhcp: false, nfs_mount: false, domain_join: false, yandex: false }
+            }
+        };
+
+        let currentVMId = 'isp';
+        const terminalOutput = document.getElementById('terminal-output');
+        const terminalInput = document.getElementById('terminal-input');
+        const terminalPrompt = document.getElementById('terminal-prompt');
+        const terminalScroll = document.getElementById('terminal-scroll');
+
+        // Инициализация
+        function init() {
+            renderCurrentVM();
+            focusInput();
+
+            // Закрытие модального окна по клику на оверлей
+            document.getElementById('grader-modal').addEventListener('click', function(e) {
+                if (e.target === this) closeGraderModal();
+            });
+
+            // Слушатель Enter
+            terminalInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    const line = terminalInput.value;
+                    terminalInput.value = '';
+                    handleCommand(line);
+                }
+            });
+
+            // Слушатель вставки (Ctrl + V)
+            document.addEventListener('paste', function(e) {
+                const text = (e.clipboardData || window.clipboardData).getData('text');
+                if (!text) return;
+
+                // Если вставляется многострочный блок (весь скрипт целиком)
+                if (text.includes('\n') || text.includes('\r')) {
+                    e.preventDefault();
+                    handleMultilinePaste(text);
+                } else {
+                    // Одиночная строка (например от Speedrun Assistant): вставляем в input терминала
+                    e.preventDefault();
+                    terminalInput.value = text.trim();
+                    terminalInput.focus();
+                }
+            });
+        }
+
+        function focusInput() {
+            terminalInput.focus();
+        }
+
+        function switchVM(id, el) {
+            currentVMId = id;
+            document.querySelectorAll('.tree-node').forEach(n => n.classList.remove('active'));
+            if (el) el.classList.add('active');
+
+            const vm = VMS[id];
+            document.getElementById('vm-display-name').innerText = `${vm.name} — Консоль (xterm.js)`;
+            document.getElementById('vm-os-tag').innerText = vm.os;
+            renderCurrentVM();
+            focusInput();
+        }
+
+        function renderCurrentVM() {
+            const vm = VMS[currentVMId];
+            terminalOutput.innerText = vm.history.join('\n');
+            terminalPrompt.innerText = vm.prompt;
+            terminalScroll.scrollTop = terminalScroll.scrollHeight;
+        }
+
+        function handleCommand(line) {
+            const vm = VMS[currentVMId];
+            vm.history.push(vm.prompt + line);
+
+            // Обработка команд
+            processCommandLogic(line, vm);
+
+            renderCurrentVM();
+        }
+
+        // Обработка мультистрочной вставки
+        function handleMultilinePaste(text) {
+            const vm = VMS[currentVMId];
+            const lines = text.split(/\r?\n/);
+
+            lines.forEach((line) => {
+                const trimmed = line.trim();
+                if (trimmed.length > 0) {
+                    vm.history.push(vm.prompt + line);
+                    processCommandLogic(line, vm);
+                }
+            });
+
+            renderCurrentVM();
+        }
+
+        // Логика эмуляции команд
+        function processCommandLogic(line, vm) {
+            const l = line.trim().toLowerCase();
+
+            // Clear
+            if (l === 'clear') {
+                vm.history = [];
+                return;
+            }
+
+            // EcoRouter логика
+            if (currentVMId === 'hq-rtr' || currentVMId === 'br-rtr') {
+                if (l === 'en' || l === 'enable') {
+                    vm.prompt = vm.name.split(' ')[1].replace(')', '') + '# ';
+                } else if (l === 'conf t' || l === 'configure terminal') {
+                    vm.prompt = vm.name.split(' ')[1].replace(')', '') + '(config)# ';
+                } else if (l.startsWith('int ') || l.startsWith('interface ')) {
+                    vm.prompt = vm.name.split(' ')[1].replace(')', '') + '(config-if)# ';
+                } else if (l.startsWith('router ospf')) {
+                    vm.prompt = vm.name.split(' ')[1].replace(')', '') + '(config-router)# ';
+                    vm.state.ospf = true;
+                } else if (l === 'ex' || l === 'exit') {
+                    vm.prompt = vm.name.split(' ')[1].replace(')', '') + '# ';
+                } else if (l === 'write' || l === 'write memory') {
+                    vm.history.push('[OK] Configuration successfully committed to startup memory.');
+                } else if (l.includes('tunnel mode gre') || l.includes('mo gre')) {
+                    vm.state.gre = true;
+                    vm.history.push('[OK] GRE tunnel interface created.');
+                } else if (l.includes('dhcp-s')) {
+                    vm.state.dhcp = true;
+                } else if (l.includes('ip nat')) {
+                    vm.state.nat = true;
+                } else if (l.includes('do sh ip ospf nei') || l.includes('show ip ospf')) {
+                    vm.history.push('Neighbor ID     Pri   State           Dead Time   Address         Interface');
+                    vm.history.push('10.10.10.2        1   FULL/DR         00:00:34    10.10.10.2      tunnel.0');
+                } else if (l.includes('do ping')) {
+                    vm.history.push('Sending 5, 100-byte ICMP Echos, timeout is 2 seconds:');
+                    vm.history.push('!!!!!');
+                    vm.history.push('Success rate is 100 percent (5/5), round-trip min/avg/max = 1/2/4 ms');
+                }
+                return;
+            }
+
+            // Linux команды (ISP, HQ-SRV, BR-SRV, HQ-CLI)
+            if (l.includes('net.ipv4.ip_forward = 1')) {
+                vm.state.ip_forward = true;
+            }
+            if (l.includes('iptables -t nat') && l.includes('masquerade')) {
+                vm.state.nat = true;
+                vm.history.push('[OK] iptables rule added to POSTROUTING table.');
+            }
+            if (l.includes('systemctl enable --now iptables')) {
+                vm.history.push('Created symlink /etc/systemd/system/multi-user.target.wants/iptables.service');
+            }
+            if (l.includes('named-checkconf') || l.includes('bind.service')) {
+                vm.state.bind = true;
+                vm.history.push('Zone au-team.irpo/IN: loaded serial 2026052500');
+                vm.history.push('OK');
+                vm.history.push('[OK] Started BIND DNS Server.');
+            }
+            if (l.includes('port 2027') || l.includes('allowusers sshuser')) {
+                vm.state.ssh_port = true;
+                vm.history.push('[OK] SSH Server reloaded on port 2027.');
+            }
+            if (l.includes('mdadm --create') && l.includes('level=0')) {
+                vm.state.raid0 = true;
+                vm.history.push('mdadm: array /dev/md0 started.');
+            }
+            if (l.includes('exportfs -ra') || l.includes('nfs-server')) {
+                vm.state.nfs = true;
+                vm.history.push('exporting 192.168.200.0/28:/raid/nfs');
+            }
+            if (l.includes('httpd2') || l.includes('mariadb')) {
+                vm.state.lamp = true;
+                vm.history.push('[OK] Started MariaDB Database Server.');
+                vm.history.push('[OK] Started Apache-HTTPD Web Server.');
+            }
+            if (l.includes('samba-tool user add') || l.includes('samba-tool domain')) {
+                vm.state.samba_ad = true;
+                vm.history.push('User "hquser" created successfully');
+            }
+            if (l.includes('ansible all -m ping')) {
+                vm.state.ansible = true;
+                vm.history.push('hq-srv | SUCCESS => { "changed": false, "ping": "pong" }');
+                vm.history.push('hq-cli | SUCCESS => { "changed": false, "ping": "pong" }');
+                vm.history.push('hq-rtr | SUCCESS => { "changed": false, "ping": "pong" }');
+                vm.history.push('br-rtr | SUCCESS => { "changed": false, "ping": "pong" }');
+            }
+            if (l.includes('docker compose up')) {
+                vm.state.docker = true;
+                vm.history.push('[+] Running 2/2');
+                vm.history.push(' ✔ Container site-1 Started');
+                vm.history.push(' ✔ Container db-1 Started');
+            }
+            if (l.includes('ping -c')) {
+                vm.history.push('PING (icmp_seq): 64 bytes: icmp_seq=1 ttl=64 time=0.45 ms');
+                vm.history.push('64 bytes: icmp_seq=2 ttl=64 time=0.38 ms');
+                vm.history.push('--- ping statistics ---');
+                vm.history.push('2 packets transmitted, 2 received, 0% packet loss');
+            }
+            if (l.includes('chrony') || l.includes('stratum 5')) {
+                vm.state.chrony = true;
+                vm.history.push('Reference ID    : 127.0.0.1 (localhost)');
+                vm.history.push('Stratum         : 5');
+                vm.history.push('Ref time (UTC)  : Sat Nov 21 19:40:00 2026');
+            }
+            if (l.includes('system-auth write ad')) {
+                vm.state.domain_join = true;
+                vm.history.push('Joined "hq-cli" to realm "au-team.irpo"');
+            }
+            if (l.includes('import.sh') || l.includes('samba-tool ou add')) {
+                vm.state.csv_import = true;
+                vm.history.push('Importing 50 users from /mnt/add/Users.csv: DONE');
+            }
+        }
+
+        // Эталонные команды для каждой машины (Модуль 1, КИМ 2027)
+        const REFERENCE_COMMANDS = {
+            'isp': [
+                "hostnamectl set-hostname isp",
+                "timedatectl set-timezone Europe/Moscow",
+                "mkdir -p /etc/net/ifaces/ens19",
+                "mkdir -p /etc/net/ifaces/ens20",
+                "cat << 'EOF' > /etc/net/ifaces/ens18/options",
+                "TYPE=eth",
+                "BOOTPROTO=dhcp",
+                "DISABLED=no",
+                "EOF",
+                "cat << 'EOF' > /etc/net/ifaces/ens19/options",
+                "TYPE=eth",
+                "BOOTPROTO=static",
+                "DISABLED=no",
+                "EOF",
+                "cp /etc/net/ifaces/ens19/options /etc/net/ifaces/ens20/options",
+                "echo \"172.16.1.1/28\" > /etc/net/ifaces/ens19/ipv4address",
+                "echo \"172.16.2.1/28\" > /etc/net/ifaces/ens20/ipv4address",
+                "cat << 'EOF' >> /etc/net/sysctl.conf",
+                "net.ipv4.ip_forward = 1",
+                "EOF",
+                "sysctl -p /etc/net/sysctl.conf",
+                "systemctl restart network",
+                "apt-get update && apt-get install -y iptables tzdata",
+                "iptables -t nat -A POSTROUTING -s 172.16.1.0/28 -o ens18 -j MASQUERADE",
+                "iptables -t nat -A POSTROUTING -s 172.16.2.0/28 -o ens18 -j MASQUERADE",
+                "iptables-save > /etc/sysconfig/iptables",
+                "systemctl enable --now iptables",
+                "ip a"
+            ],
+            'hq-rtr': [
+                "en",
+                "conf t",
+                "hostn hq-rtr",
+                "ip domain-n au-team.irpo",
+                "ntp time utc+3",
+                "user net_admin",
+                "pa P@ssw0rd",
+                "role admin",
+                "ex",
+                "ip r 0.0.0.0/0 172.16.1.1",
+                "int isp",
+                "ip add 172.16.1.2/28",
+                "ex",
+                "port te0",
+                "service-instance te0/isp",
+                "en un",
+                "co ip int isp",
+                "ex",
+                "ex",
+                "int vl100",
+                "ip add 192.168.100.1/27",
+                "ex",
+                "int vl200",
+                "ip add 192.168.200.1/28",
+                "ex",
+                "int vl999",
+                "ip add 192.168.99.1/29",
+                "ex",
+                "port te1",
+                "service-instance te1/vl100",
+                "encapsulation dot1q 100 exact",
+                "rewrite pop 1",
+                "connect ip interface vl100",
+                "ex",
+                "service-instance te1/vl200",
+                "encapsulation dot1q 200 exact",
+                "rewrite pop 1",
+                "connect ip interface vl200",
+                "ex",
+                "service-instance te1/vl999",
+                "encapsulation dot1q 999 exact",
+                "rewrite pop 1",
+                "connect ip interface vl999",
+                "ex",
+                "ex",
+                "int tunnel.0",
+                "ip add 10.10.10.1/30",
+                "ip tu 172.16.1.2 172.16.2.2 mo gre",
+                "ex",
+                "router ospf 1",
+                "ospf router-id 10.10.10.1",
+                "passive-interface default",
+                "no passive-interface tunnel.0",
+                "network 10.10.10.0/30 area 0",
+                "network 192.168.100.0/27 area 0",
+                "network 192.168.200.0/28 area 0",
+                "network 192.168.99.0/29 area 0",
+                "ex",
+                "write",
+                "exit"
+            ],
+            'br-rtr': [
+                "en",
+                "conf t",
+                "hostname br-rtr",
+                "ip domain-name au-team.irpo",
+                "ntp timezone utc+3",
+                "username net_admin",
+                "password P@ssw0rd",
+                "role admin",
+                "ex",
+                "ip route 0.0.0.0/0 172.16.2.1",
+                "int isp",
+                "ip address 172.16.2.2/28",
+                "ex",
+                "port te0",
+                "service-instance te0/isp",
+                "encapsulation untagged",
+                "connect ip interface isp",
+                "ex",
+                "ex",
+                "int fw",
+                "ip address 172.16.3.1/30",
+                "ex",
+                "port te1",
+                "service-instance te1/fw",
+                "encapsulation untagged",
+                "connect ip interface fw",
+                "ex",
+                "ex",
+                "int tunnel.0",
+                "ip address 10.10.10.2/30",
+                "ip tunnel 172.16.2.2 172.16.1.2 mode gre",
+                "ex",
+                "router ospf 1",
+                "ospf router-id 10.10.10.2",
+                "passive-interface isp",
+                "network 172.16.3.0/30 area 0",
+                "network 10.10.10.0/30 area 0",
+                "ex",
+                "write",
+                "exit"
+            ],
+            'br-fw': [
+                "admin",
+                "P@ssw0rd1234",
+                "P@ssw0rd1234",
+                "2",
+                "1",
+                "172.16.3.2/30",
+                "172.16.3.1",
+                "8.8.8.8",
+                "0"
+            ],
+            'hq-srv': [
+                "hostnamectl set-hostname hq-srv.au-team.irpo",
+                "mkdir -p /etc/net/ifaces/ens19",
+                "echo 'TYPE=eth' > /etc/net/ifaces/ens19/options",
+                "echo 'BOOTPROTO=static' >> /etc/net/ifaces/ens19/options",
+                "echo '192.168.1.2/24' > /etc/net/ifaces/ens19/ipv4address",
+                "echo 'default via 192.168.1.1' > /etc/net/ifaces/ens19/ipv4route",
+                "systemctl restart network",
+                "apt-get update && apt-get install -y bind bind-utils",
+                "systemctl enable --now named",
+                "sed -i 's/#Port 22/Port 2027/' /etc/openssh/sshd_config",
+                "systemctl restart sshd"
+            ],
+            'br-srv': [
+                "hostnamectl set-hostname br-srv.au-team.irpo",
+                "mkdir -p /etc/net/ifaces/ens19",
+                "echo 'TYPE=eth' > /etc/net/ifaces/ens19/options",
+                "echo 'BOOTPROTO=static' >> /etc/net/ifaces/ens19/options",
+                "echo '172.16.3.6/30' > /etc/net/ifaces/ens19/ipv4address",
+                "echo 'default via 172.16.3.5' > /etc/net/ifaces/ens19/ipv4route",
+                "systemctl restart network",
+                "sed -i 's/#Port 22/Port 2027/' /etc/openssh/sshd_config",
+                "systemctl restart sshd"
+            ],
+            'hq-cli': [
+                "hostnamectl set-hostname hq-cli",
+                "dhclient -r && dhclient",
+                "ip a",
+                "ip r"
+            ]
+        };
+
+        let isTypingActive = false;
+        let typingTimeout = null;
+
+        function autoApplySolution() {
+            const lines = REFERENCE_COMMANDS[currentVMId];
+            if (lines) {
+                handleMultilinePaste(lines.join('\n'));
+            }
+        }
+
+        async function toggleSimulatedTyping() {
+            const btn = document.getElementById('btn-human-type');
+            if (isTypingActive) {
+                isTypingActive = false;
+                if (typingTimeout) clearTimeout(typingTimeout);
+                btn.innerText = '⌨️ Авто-печать (270 CPM)';
+                btn.style.background = '#e63946';
+                return;
+            }
+
+            const lines = REFERENCE_COMMANDS[currentVMId];
+            if (!lines || lines.length === 0) return;
+
+            isTypingActive = true;
+            btn.innerText = '🛑 Стоп печать (ESC)';
+            btn.style.background = '#ff0054';
+
+            for (let i = 0; i < lines.length; i++) {
+                if (!isTypingActive) break;
+                const line = lines[i].trim();
+                if (!line || line.startsWith('#')) continue;
+
+                terminalInput.value = '';
+                for (let c = 0; c < line.length; c++) {
+                    if (!isTypingActive) break;
+                    terminalInput.value += line[c];
+                    terminalScroll.scrollTop = terminalScroll.scrollHeight;
+                    const ch = line[c];
+                    const delay = (ch === ' ' || '/-_.=<>:'.includes(ch)) ? 60 + Math.random()*35 : 30 + Math.random()*25;
+                    await new Promise(r => typingTimeout = setTimeout(r, delay));
+                }
+
+                if (!isTypingActive) break;
+                await new Promise(r => typingTimeout = setTimeout(r, 180 + Math.random()*100));
+
+                if (!isTypingActive) break;
+                terminalInput.value = '';
+                handleCommand(line);
+                terminalScroll.scrollTop = terminalScroll.scrollHeight;
+
+                await new Promise(r => typingTimeout = setTimeout(r, 350 + Math.random()*200));
+            }
+
+            isTypingActive = false;
+            btn.innerText = '⌨️ Авто-печать (270 CPM)';
+            btn.style.background = '#e63946';
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeGraderModal();
+                if (isTypingActive) {
+                    isTypingActive = false;
+                    if (typingTimeout) clearTimeout(typingTimeout);
+                    const btn = document.getElementById('btn-human-type');
+                    if (btn) {
+                        btn.innerText = '⌨️ Авто-печать (270 CPM)';
+                        btn.style.background = '#e63946';
+                    }
+                }
+            }
+        });
+
+        // Вставка из системного буфера
+        async function pasteFromClipboard() {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) {
+                    handleMultilinePaste(text);
+                }
+            } catch (err) {
+                alert('Нажмите Ctrl + V на клавиатуре для вставки в терминал!');
+            }
+        }
+
+        function clearCurrentTerminal() {
+            VMS[currentVMId].history = [];
+            renderCurrentVM();
+            focusInput();
+        }
+
+        function rebootCurrentVM() {
+            const vm = VMS[currentVMId];
+            vm.history = [
+                'Rebooting system...',
+                'System halted.',
+                'Restarting system.',
+                'Booting kernel...',
+                `${vm.name} online.`,
+                ''
+            ];
+            renderCurrentVM();
+            focusInput();
+        }
+
+        // Авто-Грейдер КИМ 2027
+        function openGraderModal() {
+            const modal = document.getElementById('grader-modal');
+            const list = document.getElementById('criteria-list-container');
+            list.innerHTML = '';
+
+            let totalPoints = 0;
+            const maxPoints = 27; // Стандартный инвариантный максимум
+
+            // Критерии
+            const criteria = [
+                {
+                    name: 'Модуль 1: ISP Маршрутизация и NAT (ip_forward + iptables)',
+                    pass: VMS['isp'].state.ip_forward || VMS['isp'].state.nat,
+                    pts: 3
+                },
+                {
+                    name: 'Модуль 1: HQ-RTR (GRE Туннель + OSPF + VLAN 100/200)',
+                    pass: VMS['hq-rtr'].state.ospf || VMS['hq-rtr'].state.gre,
+                    pts: 4
+                },
+                {
+                    name: 'Модуль 1: BR-RTR (Стык с Ideco + OSPF + NAT)',
+                    pass: VMS['br-rtr'].state.ospf || VMS['br-rtr'].state.gre,
+                    pts: 3
+                },
+                {
+                    name: 'Модуль 1: HQ-SRV DNS BIND (Зоны au-team.irpo, PTR, SSH 2027)',
+                    pass: VMS['hq-srv'].state.bind || VMS['hq-srv'].state.ssh_port,
+                    pts: 4
+                },
+                {
+                    name: 'Модуль 1: BR-SRV Сеть и защищенный SSH (порт 2027, баннер)',
+                    pass: VMS['br-srv'].state.ssh_port,
+                    pts: 2
+                },
+                {
+                    name: 'Модуль 2: ISP Chrony Сервер точного времени (Stratum 5)',
+                    pass: VMS['isp'].state.chrony,
+                    pts: 2
+                },
+                {
+                    name: 'Модуль 2: HQ-SRV Сервисы (RAID 0, NFS экспорт, Web LAMP MariaDB)',
+                    pass: VMS['hq-srv'].state.raid0 || VMS['hq-srv'].state.nfs || VMS['hq-srv'].state.lamp,
+                    pts: 3
+                },
+                {
+                    name: 'Модуль 2: BR-SRV Контроллер домена Samba AD и Ansible',
+                    pass: VMS['br-srv'].state.samba_ad || VMS['br-srv'].state.ansible,
+                    pts: 3
+                },
+                {
+                    name: 'Модуль 2: HQ-CLI Автомонтирование NFS и ввод в домен',
+                    pass: VMS['hq-cli'].state.domain_join,
+                    pts: 3
+                }
+            ];
+
+            criteria.forEach(c => {
+                if (c.pass) totalPoints += c.pts;
+                const row = document.createElement('div');
+                row.className = 'crit-item';
+                row.innerHTML = `
+                    <span>${c.name}</span>
+                    <span class="${c.pass ? 'crit-status-pass' : 'crit-status-fail'}">
+                        ${c.pass ? `+${c.pts} балла (Выполнено)` : '0 баллов (Не выполнено)'}
+                    </span>
+                `;
+                list.appendChild(row);
+            });
+
+            // Расчет оценки
+            let grade = 2;
+            if (totalPoints >= 22) grade = 5;
+            else if (totalPoints >= 16) grade = 4;
+            else if (totalPoints >= 10) grade = 3;
+
+            document.getElementById('total-score-val').innerText = `${totalPoints} / ${maxPoints} баллов`;
+            document.getElementById('total-grade-val').innerText = `Оценка: ${grade} (${grade === 5 ? 'Отлично' : grade === 4 ? 'Хорошо' : grade === 3 ? 'Удовлетворительно' : 'Не сдано'})`;
+
+            modal.style.display = 'flex';
+        }
+
+        function closeGraderModal() {
+            document.getElementById('grader-modal').style.display = 'none';
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>

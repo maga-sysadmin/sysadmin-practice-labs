@@ -1,0 +1,98 @@
+! =====================================================================
+! Лабораторная работа 1.2: Маршрутизатор центрального узла HQ-RTR (EcoRouter CLI)
+! Специальность: 09.02.06 Сетевое и системное администрирование
+! =====================================================================
+
+en
+conf t
+hostn hq-rtr
+ip domain-n au-team.irpo
+ntp time utc+3
+user net_admin
+pa P@ssw0rd
+role admin
+ex
+ip r 0.0.0.0/0 172.16.1.1
+int isp
+ip add 172.16.1.2/28
+ex
+port te0
+service-instance te0/isp
+en un
+co ip int isp
+ex
+ex
+int vl100
+ip add 192.168.100.1/27
+ex
+int vl200
+ip add 192.168.200.1/28
+ex
+int vl999
+ip add 192.168.99.1/29
+ex
+port te1
+service-instance te1/vl100
+encapsulation dot1q 100 exact
+rewrite pop 1
+connect ip interface vl100
+ex
+service-instance te1/vl200
+encapsulation dot1q 200 exact
+rewrite pop 1
+connect ip interface vl200
+ex
+service-instance te1/vl999
+encapsulation dot1q 999 exact
+rewrite pop 1
+connect ip interface vl999
+ex
+ex
+int tunnel.0
+ip add 10.10.10.1/30
+ip tu 172.16.1.2 172.16.2.2 mo gre
+ex
+router ospf 1
+ospf router-id 10.10.10.1
+passive-interface default
+no passive-interface tunnel.0
+network 10.10.10.0/30 area 0
+network 192.168.100.0/27 area 0
+network 192.168.200.0/28 area 0
+network 192.168.99.0/29 area 0
+ex
+int tunnel.0
+ip ospf authentication message-digest
+ip ospf message-digest-key 1 md5 P@ssw0rd
+ex
+int isp
+ip n o
+int vl100
+ip n i
+int vl200
+ip n i
+int vl999
+ip nat i
+ex
+ip nat p VLAN100 192.168.100.1-192.168.100.30
+ip nat p VLAN200 192.168.200.1-192.168.200.14
+ip nat p VLAN999 192.168.99.1-192.168.99.6
+ip nat so d i p VLAN100 o i isp
+ip nat so d i p VLAN200 o i isp
+ip nat so d i p VLAN999 o i isp
+ip po VLAN200 1
+ra 192.168.200.2-192.168.200.14
+ex
+ex
+dhcp-s 1
+mask 28
+po VLAN200 1
+ga 192.168.200.1
+dns 192.168.100.2
+domain-n au-team.irpo
+ex
+exit
+int vl200
+dhcp-server 1
+ex
+write
