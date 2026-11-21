@@ -240,6 +240,7 @@
             color: #fca5a5;
         }
 
+        .speed-opt:hover { background: #242c3d !important; }
         .t-btn-clear:hover {
             background-color: #991b1b;
         }
@@ -454,7 +455,44 @@
                     <span id="vm-os-tag" style="font-size: 11px; background: #374151; padding: 2px 8px; border-radius: 4px; color: #9ca3af;">ALT Linux</span>
                 </div>
                 <div class="vm-toolbar-btns">
-                    <button class="t-btn" id="btn-human-type" onclick="toggleSimulatedTyping()" style="background: #e63946; color: white; font-weight: bold;">⌨️ Авто-печать (270 CPM)</button>
+                    <div style="position: relative; display: inline-block;">
+                        <button class="t-btn" id="btn-human-type" onclick="handleTypeBtnClick()" style="background: #e63946; color: white; font-weight: bold; display: flex; align-items: center; gap: 6px;">
+                            <span id="btn-human-type-label">⌨️ Авто-печать (270 CPM)</span> <span style="font-size: 10px;">▼</span>
+                        </button>
+                        <div id="speed-dropdown-menu" style="display: none; position: absolute; top: calc(100% + 5px); right: 0; background: #161a23; border: 1px solid #374151; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.6); z-index: 10000; min-width: 260px; overflow: hidden; padding: 4px;">
+                            <div style="padding: 6px 10px; font-size: 11px; font-weight: bold; color: #9ca3af; text-transform: uppercase; border-bottom: 1px solid #283144;">
+                                Скорость живой печати:
+                            </div>
+                            <div class="speed-opt" onclick="startTypingWithSpeed('noob', 135)" style="padding: 8px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; transition: background 0.15s;">
+                                <div>
+                                    <div style="font-weight: bold; color: #facc15; font-size: 12.5px;">🐢 NOOB (Нуб)</div>
+                                    <div style="font-size: 10.5px; color: #9ca3af;">Один палец + шпаргалка (135 CPM)</div>
+                                </div>
+                                <span style="font-weight: 800; color: #facc15; font-size: 12px;">0.5x</span>
+                            </div>
+                            <div class="speed-opt" onclick="startTypingWithSpeed('pro', 270)" style="padding: 8px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; transition: background 0.15s; background: rgba(59, 130, 246, 0.1);">
+                                <div>
+                                    <div style="font-weight: bold; color: #60a5fa; font-size: 12.5px;">⚡ PRO (Сисадмин)</div>
+                                    <div style="font-size: 10.5px; color: #9ca3af;">Штатная скорость спеца (270 CPM)</div>
+                                </div>
+                                <span style="font-weight: 800; color: #60a5fa; font-size: 12px;">1.0x</span>
+                            </div>
+                            <div class="speed-opt" onclick="startTypingWithSpeed('hacker', 540)" style="padding: 8px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; transition: background 0.15s;">
+                                <div>
+                                    <div style="font-weight: bold; color: #4ade80; font-size: 12.5px;">🚀 HACKER (Хакер)</div>
+                                    <div style="font-size: 10.5px; color: #9ca3af;">Голливудский взлом (540 CPM)</div>
+                                </div>
+                                <span style="font-weight: 800; color: #4ade80; font-size: 12px;">2.0x</span>
+                            </div>
+                            <div class="speed-opt" onclick="startTypingWithSpeed('ultra', 1080)" style="padding: 8px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; transition: background 0.15s;">
+                                <div>
+                                    <div style="font-weight: bold; color: #f43f5e; font-size: 12.5px;">💥 ULTRA (Турбо)</div>
+                                    <div style="font-size: 10.5px; color: #9ca3af;">Максимальный автопилот (1080 CPM)</div>
+                                </div>
+                                <span style="font-weight: 800; color: #f43f5e; font-size: 12px;">4.0x</span>
+                            </div>
+                        </div>
+                    </div>
                     <button class="t-btn" onclick="autoApplySolution()" style="background: #2b7a4b; color: white;">⚡ Вставить решение</button>
                     <button class="t-btn t-btn-clear" onclick="clearCurrentTerminal()">Очистить (clear)</button>
                     <button class="t-btn" onclick="rebootCurrentVM()">Перезагрузить</button>
@@ -986,22 +1024,55 @@
             }
         }
 
-        async function toggleSimulatedTyping() {
-            const btn = document.getElementById('btn-human-type');
+        let currentTypingSpeed = 'pro';
+        let currentCPM = 270;
+
+        function handleTypeBtnClick() {
             if (isTypingActive) {
-                isTypingActive = false;
-                if (typingTimeout) clearTimeout(typingTimeout);
-                btn.innerText = '⌨️ Авто-печать (270 CPM)';
-                btn.style.background = '#e63946';
+                stopTyping();
                 return;
             }
+            const menu = document.getElementById('speed-dropdown-menu');
+            if (menu) {
+                menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+            }
+        }
 
+        function stopTyping() {
+            isTypingActive = false;
+            if (typingTimeout) clearTimeout(typingTimeout);
+            const btn = document.getElementById('btn-human-type');
+            const lbl = document.getElementById('btn-human-type-label');
+            if (btn) btn.style.background = '#e63946';
+            if (lbl) lbl.innerText = `⌨️ Авто-печать (${currentCPM} CPM)`;
+        }
+
+        function startTypingWithSpeed(speedMode, cpm) {
+            currentTypingSpeed = speedMode;
+            currentCPM = cpm;
+            const menu = document.getElementById('speed-dropdown-menu');
+            if (menu) menu.style.display = 'none';
+            runSimulatedTyping();
+        }
+
+        async function runSimulatedTyping() {
             const lines = REFERENCE_COMMANDS[currentVMId];
             if (!lines || lines.length === 0) return;
 
+            const btn = document.getElementById('btn-human-type');
+            const lbl = document.getElementById('btn-human-type-label');
             isTypingActive = true;
-            btn.innerText = '🛑 Стоп печать (ESC)';
-            btn.style.background = '#ff0054';
+            if (btn) btn.style.background = '#ff0054';
+            if (lbl) lbl.innerText = `🛑 Стоп [${currentTypingSpeed.toUpperCase()} ${currentCPM} CPM] (ESC)`;
+
+            // Настройка задержек по CPM
+            const delays = {
+                'noob': { charMin: 180, charRnd: 80, spacePunct: 240, endLine: 650, nextCmd: 1200 },
+                'pro': { charMin: 28, charRnd: 22, spacePunct: 55, endLine: 180, nextCmd: 350 },
+                'hacker': { charMin: 12, charRnd: 10, spacePunct: 24, endLine: 80, nextCmd: 160 },
+                'ultra': { charMin: 4, charRnd: 4, spacePunct: 8, endLine: 30, nextCmd: 60 }
+            };
+            const d = delays[currentTypingSpeed] || delays['pro'];
 
             for (let i = 0; i < lines.length; i++) {
                 if (!isTypingActive) break;
@@ -1014,25 +1085,34 @@
                     terminalInput.value += line[c];
                     terminalScroll.scrollTop = terminalScroll.scrollHeight;
                     const ch = line[c];
-                    const delay = (ch === ' ' || '/-_.=<>:'.includes(ch)) ? 60 + Math.random()*35 : 30 + Math.random()*25;
+                    const delay = (ch === ' ' || '/-_.=<>:'.includes(ch)) ? d.spacePunct + Math.random()*20 : d.charMin + Math.random()*d.charRnd;
                     await new Promise(r => typingTimeout = setTimeout(r, delay));
                 }
 
                 if (!isTypingActive) break;
-                await new Promise(r => typingTimeout = setTimeout(r, 180 + Math.random()*100));
+                await new Promise(r => typingTimeout = setTimeout(r, d.endLine + Math.random()*50));
 
                 if (!isTypingActive) break;
                 terminalInput.value = '';
                 handleCommand(line);
                 terminalScroll.scrollTop = terminalScroll.scrollHeight;
 
-                await new Promise(r => typingTimeout = setTimeout(r, 350 + Math.random()*200));
+                await new Promise(r => typingTimeout = setTimeout(r, d.nextCmd + Math.random()*100));
             }
 
-            isTypingActive = false;
-            btn.innerText = '⌨️ Авто-печать (270 CPM)';
-            btn.style.background = '#e63946';
+            stopTyping();
         }
+
+        // Закрытие меню при клике мимо
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('speed-dropdown-menu');
+            const btn = document.getElementById('btn-human-type');
+            if (menu && menu.style.display === 'block') {
+                if (!menu.contains(e.target) && !btn.contains(e.target)) {
+                    menu.style.display = 'none';
+                }
+            }
+        });
 
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {

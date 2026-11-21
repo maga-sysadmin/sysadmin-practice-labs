@@ -265,6 +265,7 @@
             align-items: center;
         }
 
+        .speed-opt:hover { background: #242c3d !important; }
         .btn-action {
             padding: 6px 12px;
             border-radius: 6px;
@@ -1512,7 +1513,8 @@ mount -o ro /dev/sr1 /mnt/add 2>/dev/null || true
 cat << 'EOF' > /root/import.sh
 #!/bin/bash
 csv=${1:-/mnt/add/Users.csv}
-tail -n +2 "$csv" | tr -d '' > /tmp/users.csv
+tail -n +2 "$csv" | tr -d '
+' > /tmp/users.csv
 cut -d';' -f5 /tmp/users.csv | sort -u | while read -r ou; do
   samba-tool ou add "OU=$ou" 2>/dev/null || true
 done
@@ -1720,9 +1722,44 @@ echo "list jobs" | bconsole 2>/dev/null || true</pre>
                         <span>🖥️</span> [root@isp ~]# • ALT Linux (Server Engine 10.1)
                     </div>
                     <div class="emu-term-actions">
-                        <button class="emu-btn-type" id="btn-human-type" onclick="toggleHumanTyping()" style="background: #e63946; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 0 12px rgba(230, 57, 70, 0.5); transition: all 0.2s;">
-                            ⌨️ Авто-печать (270 CPM)
+                        <div style="position: relative; display: inline-block;">
+                        <button class="emu-btn-type" id="btn-human-type" onclick="handleTypeBtnClick()" style="background: #e63946; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 0 12px rgba(230, 57, 70, 0.5); transition: all 0.2s;">
+                            <span id="btn-human-type-label">⌨️ Авто-печать (270 CPM)</span> <span style="font-size: 10px;">▼</span>
                         </button>
+                        <div id="speed-dropdown-menu" style="display: none; position: absolute; top: calc(100% + 5px); right: 0; background: #161a23; border: 1px solid #374151; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.6); z-index: 10000; min-width: 260px; overflow: hidden; padding: 4px;">
+                            <div style="padding: 6px 10px; font-size: 11px; font-weight: bold; color: #9ca3af; text-transform: uppercase; border-bottom: 1px solid #283144;">
+                                Скорость живой печати:
+                            </div>
+                            <div class="speed-opt" onclick="startTypingWithSpeed('noob', 135)" style="padding: 8px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; transition: background 0.15s;">
+                                <div>
+                                    <div style="font-weight: bold; color: #facc15; font-size: 12.5px;">🐢 NOOB (Нуб)</div>
+                                    <div style="font-size: 10.5px; color: #9ca3af;">Один палец + шпаргалка (135 CPM)</div>
+                                </div>
+                                <span style="font-weight: 800; color: #facc15; font-size: 12px;">0.5x</span>
+                            </div>
+                            <div class="speed-opt" onclick="startTypingWithSpeed('pro', 270)" style="padding: 8px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; transition: background 0.15s; background: rgba(59, 130, 246, 0.1);">
+                                <div>
+                                    <div style="font-weight: bold; color: #60a5fa; font-size: 12.5px;">⚡ PRO (Сисадмин)</div>
+                                    <div style="font-size: 10.5px; color: #9ca3af;">Штатная скорость спеца (270 CPM)</div>
+                                </div>
+                                <span style="font-weight: 800; color: #60a5fa; font-size: 12px;">1.0x</span>
+                            </div>
+                            <div class="speed-opt" onclick="startTypingWithSpeed('hacker', 540)" style="padding: 8px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; transition: background 0.15s;">
+                                <div>
+                                    <div style="font-weight: bold; color: #4ade80; font-size: 12.5px;">🚀 HACKER (Хакер)</div>
+                                    <div style="font-size: 10.5px; color: #9ca3af;">Голливудский взлом (540 CPM)</div>
+                                </div>
+                                <span style="font-weight: 800; color: #4ade80; font-size: 12px;">2.0x</span>
+                            </div>
+                            <div class="speed-opt" onclick="startTypingWithSpeed('ultra', 1080)" style="padding: 8px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; transition: background 0.15s;">
+                                <div>
+                                    <div style="font-weight: bold; color: #f43f5e; font-size: 12.5px;">💥 ULTRA (Турбо)</div>
+                                    <div style="font-size: 10.5px; color: #9ca3af;">Максимальный автопилот (1080 CPM)</div>
+                                </div>
+                                <span style="font-weight: 800; color: #f43f5e; font-size: 12px;">4.0x</span>
+                            </div>
+                        </div>
+                    </div>
                         <button class="emu-btn-run" onclick="runEmuScript()">⚡ Быстрый накат</button>
                         <button class="emu-btn-audit" onclick="runEmuAudit()">🔍 Экспресс-аудит КИМ</button>
                         <button class="emu-btn-clear" onclick="clearEmuTerminal()">🧹 Очистить</button>
@@ -2176,17 +2213,38 @@ rtr2()  // Копирует расширенные ACL и списки дост�
 
         let isHumanTyping = false;
         let humanTypeTimeout = null;
+        let currentTypingSpeed = 'pro';
+        let currentCPM = 270;
 
-        async function toggleHumanTyping() {
-            const btn = document.getElementById('btn-human-type');
+        function handleTypeBtnClick() {
             if (isHumanTyping) {
-                isHumanTyping = false;
-                if (humanTypeTimeout) clearTimeout(humanTypeTimeout);
-                btn.innerText = '⌨️ Авто-печать (270 CPM)';
-                btn.style.background = '#e63946';
+                stopTyping();
                 return;
             }
+            const menu = document.getElementById('speed-dropdown-menu');
+            if (menu) {
+                menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+            }
+        }
 
+        function stopTyping() {
+            isHumanTyping = false;
+            if (humanTypeTimeout) clearTimeout(humanTypeTimeout);
+            const btn = document.getElementById('btn-human-type');
+            const lbl = document.getElementById('btn-human-type-label');
+            if (btn) btn.style.background = '#e63946';
+            if (lbl) lbl.innerText = `⌨️ Авто-печать (${currentCPM} CPM)`;
+        }
+
+        function startTypingWithSpeed(speedMode, cpm) {
+            currentTypingSpeed = speedMode;
+            currentCPM = cpm;
+            const menu = document.getElementById('speed-dropdown-menu');
+            if (menu) menu.style.display = 'none';
+            runHumanTyping();
+        }
+
+        async function runHumanTyping() {
             const nodeCmds = (CMD_DICT[currentEmuNode] && CMD_DICT[currentEmuNode][currentEmuModule]) 
                 ? CMD_DICT[currentEmuNode][currentEmuModule]
                 : [
@@ -2198,11 +2256,22 @@ rtr2()  // Копирует расширенные ACL и списки дост�
                 ];
 
             isHumanTyping = true;
-            btn.innerText = '🛑 Стоп печать (ESC)';
-            btn.style.background = '#ff0054';
+            const btn = document.getElementById('btn-human-type');
+            const lbl = document.getElementById('btn-human-type-label');
+            if (btn) btn.style.background = '#ff0054';
+            if (lbl) lbl.innerText = `🛑 Стоп [${currentTypingSpeed.toUpperCase()} ${currentCPM} CPM] (ESC)`;
 
             const input = document.getElementById('emu-term-input');
             const prompt = document.getElementById('emu-prompt-label').innerText;
+
+            // Настройка задержек по CPM
+            const delays = {
+                'noob': { charMin: 180, charRnd: 80, spacePunct: 240, endLine: 650, nextCmd: 1200 },
+                'pro': { charMin: 28, charRnd: 22, spacePunct: 55, endLine: 180, nextCmd: 350 },
+                'hacker': { charMin: 12, charRnd: 10, spacePunct: 24, endLine: 80, nextCmd: 160 },
+                'ultra': { charMin: 4, charRnd: 4, spacePunct: 8, endLine: 30, nextCmd: 60 }
+            };
+            const d = delays[currentTypingSpeed] || delays['pro'];
 
             for (let i = 0; i < nodeCmds.length; i++) {
                 if (!isHumanTyping) break;
@@ -2214,25 +2283,34 @@ rtr2()  // Копирует расширенные ACL и списки дост�
                     if (!isHumanTyping) break;
                     input.value += line[c];
                     const ch = line[c];
-                    const delay = (ch === ' ' || '/-_.=<>:'.includes(ch)) ? 55 + Math.random()*30 : 25 + Math.random()*20;
+                    const delay = (ch === ' ' || '/-_.=<>:'.includes(ch)) ? d.spacePunct + Math.random()*20 : d.charMin + Math.random()*d.charRnd;
                     await new Promise(r => humanTypeTimeout = setTimeout(r, delay));
                 }
 
                 if (!isHumanTyping) break;
-                await new Promise(r => humanTypeTimeout = setTimeout(r, 160 + Math.random()*90));
+                await new Promise(r => humanTypeTimeout = setTimeout(r, d.endLine + Math.random()*50));
 
                 if (!isHumanTyping) break;
                 input.value = '';
                 appendTermLine(prompt + line, 'cmd');
                 simulateCommandOutput(line);
 
-                await new Promise(r => humanTypeTimeout = setTimeout(r, 320 + Math.random()*150));
+                await new Promise(r => humanTypeTimeout = setTimeout(r, d.nextCmd + Math.random()*100));
             }
 
-            isHumanTyping = false;
-            btn.innerText = '⌨️ Авто-печать (270 CPM)';
-            btn.style.background = '#e63946';
+            stopTyping();
         }
+
+        // Закрытие меню при клике мимо
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('speed-dropdown-menu');
+            const btn = document.getElementById('btn-human-type');
+            if (menu && menu.style.display === 'block') {
+                if (!menu.contains(e.target) && !btn.contains(e.target)) {
+                    menu.style.display = 'none';
+                }
+            }
+        });
 
         function simulateCommandOutput(cmd) {
             const low = cmd.toLowerCase();
