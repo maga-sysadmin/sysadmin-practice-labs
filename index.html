@@ -1720,7 +1720,10 @@ echo "list jobs" | bconsole 2>/dev/null || true</pre>
                         <span>🖥️</span> [root@isp ~]# • ALT Linux (Server Engine 10.1)
                     </div>
                     <div class="emu-term-actions">
-                        <button class="emu-btn-run" onclick="runEmuScript()">▶ Запустить развертывание</button>
+                        <button class="emu-btn-type" id="btn-human-type" onclick="toggleHumanTyping()" style="background: #e63946; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 0 12px rgba(230, 57, 70, 0.5); transition: all 0.2s;">
+                            ⌨️ Авто-печать (270 CPM)
+                        </button>
+                        <button class="emu-btn-run" onclick="runEmuScript()">⚡ Быстрый накат</button>
                         <button class="emu-btn-audit" onclick="runEmuAudit()">🔍 Экспресс-аудит КИМ</button>
                         <button class="emu-btn-clear" onclick="clearEmuTerminal()">🧹 Очистить</button>
                     </div>
@@ -1998,8 +2001,280 @@ rtr2()  // Копирует расширенные ACL и списки дост�
         }
 
         // =================================================================
-        // ЛОГИКА ЭМУЛЯТОРА ТЕРМИНАЛА
+        // ЛОГИКА ЭМУЛЯТОРА ТЕРМИНАЛА С ЖИВОЙ АВТО-ПЕЧАТЬЮ (270 CPM)
         // =================================================================
+        const CMD_DICT = {
+            'isp': {
+                1: [
+                    "hostnamectl set-hostname isp",
+                    "timedatectl set-timezone Europe/Moscow",
+                    "mkdir -p /etc/net/ifaces/ens19 /etc/net/ifaces/ens20",
+                    "echo '172.16.1.1/28' > /etc/net/ifaces/ens19/ipv4address",
+                    "echo '172.16.2.1/28' > /etc/net/ifaces/ens20/ipv4address",
+                    "sysctl -w net.ipv4.ip_forward=1",
+                    "iptables -t nat -A POSTROUTING -s 172.16.1.0/28 -o ens18 -j MASQUERADE",
+                    "iptables -t nat -A POSTROUTING -s 172.16.2.0/28 -o ens18 -j MASQUERADE",
+                    "systemctl restart network",
+                    "ip a",
+                    "ping -c 2 172.16.1.2"
+                ],
+                2: [
+                    "systemctl enable --now chronyd",
+                    "cat << 'EOF' > /etc/chrony.conf",
+                    "server 127.0.0.1 iburst prefer",
+                    "local stratum 5",
+                    "allow 0/0",
+                    "EOF",
+                    "systemctl restart chronyd",
+                    "chronyc tracking",
+                    "chronyc sources"
+                ],
+                3: [
+                    "apt-get update && apt-get install -y nginx apache2-utils",
+                    "htpasswd -bc /etc/nginx/htpasswd WEB P@ssw0rd",
+                    "nginx -t",
+                    "systemctl enable --now nginx",
+                    "curl -k -u WEB:P@ssw0rd https://web.au-team.irpo"
+                ]
+            },
+            'hq-rtr': {
+                1: [
+                    "en",
+                    "conf t",
+                    "hostn hq-rtr",
+                    "ip r 0.0.0.0/0 172.16.1.1",
+                    "int isp",
+                    "ip add 172.16.1.2/28",
+                    "ex",
+                    "int vl100",
+                    "ip add 192.168.100.1/27",
+                    "ex",
+                    "int vl200",
+                    "ip add 192.168.200.1/28",
+                    "ex",
+                    "int tunnel.0",
+                    "ip add 10.10.10.1/30",
+                    "ip tu 172.16.1.2 172.16.2.2 mo gre",
+                    "ex",
+                    "router ospf 1",
+                    "network 10.10.10.0/30 area 0",
+                    "network 192.168.100.0/27 area 0",
+                    "network 192.168.200.0/28 area 0",
+                    "ex",
+                    "write",
+                    "do sh ip ospf nei"
+                ],
+                2: [
+                    "do sh ip ospf nei",
+                    "do sh ip int b",
+                    "do ping 172.16.1.1"
+                ],
+                3: [
+                    "conf t",
+                    "ip access-list standard MANAGEMENT",
+                    "permit 192.168.99.0/29",
+                    "ex",
+                    "write"
+                ]
+            },
+            'br-rtr': {
+                1: [
+                    "en",
+                    "conf t",
+                    "hostname br-rtr",
+                    "ip route 0.0.0.0/0 172.16.2.1",
+                    "int isp",
+                    "ip address 172.16.2.2/28",
+                    "ex",
+                    "int fw",
+                    "ip address 172.16.3.1/30",
+                    "ex",
+                    "int tunnel.0",
+                    "ip address 10.10.10.2/30",
+                    "ip tunnel 172.16.2.2 172.16.1.2 mode gre",
+                    "ex",
+                    "router ospf 1",
+                    "network 172.16.3.0/30 area 0",
+                    "network 10.10.10.0/30 area 0",
+                    "ex",
+                    "write",
+                    "do sh ip ospf nei"
+                ],
+                2: ["do sh ip ospf nei", "do ping 10.10.10.1"],
+                3: ["write", "do sh ip route"]
+            },
+            'hq-srv': {
+                1: [
+                    "hostnamectl set-hostname hq-srv.au-team.irpo",
+                    "echo '192.168.100.2/27' > /etc/net/ifaces/ens18/ipv4address",
+                    "echo 'default via 192.168.100.1' > /etc/net/ifaces/ens18/ipv4route",
+                    "systemctl restart network",
+                    "named-checkconf",
+                    "systemctl enable --now bind.service",
+                    "sed -i 's/#Port 22/Port 2027/' /etc/openssh/sshd_config",
+                    "systemctl restart sshd",
+                    "ip a"
+                ],
+                2: [
+                    "mdadm --create /dev/md0 --level=0 --raid-devices=2 /dev/sda /dev/sdb -R",
+                    "mkfs.ext4 /dev/md0p1",
+                    "mount /dev/md0p1 /raid",
+                    "exportfs -ra && exportfs -v",
+                    "systemctl enable --now mariadb httpd2",
+                    "curl -s localhost | grep title"
+                ],
+                3: [
+                    "echo 'LOGINTERVAL=420' > /etc/default/atop",
+                    "systemctl restart atop",
+                    "cupsctl --remote-any --share-printers",
+                    "fail2ban-client status sshd"
+                ]
+            },
+            'br-srv': {
+                1: [
+                    "hostnamectl set-hostname br-srv.au-team.irpo",
+                    "echo '172.16.3.6/30' > /etc/net/ifaces/ens18/ipv4address",
+                    "echo 'default via 172.16.3.5' > /etc/net/ifaces/ens18/ipv4route",
+                    "systemctl restart network",
+                    "ping -c 2 172.16.3.5",
+                    "ping -c 2 192.168.100.2"
+                ],
+                2: [
+                    "samba-tool domain provision --realm=AU-TEAM.IRPO --domain=AU-TEAM --server-role=dc",
+                    "systemctl enable --now samba-dc",
+                    "samba-tool group add hq",
+                    "for i in {1..5}; do samba-tool user create hquser$i P@ssw0rd; done",
+                    "samba-tool domain info 127.0.0.1",
+                    "ansible all -m ping"
+                ],
+                3: [
+                    "/root/import.sh /mnt/add/Users.csv",
+                    "samba-tool user list",
+                    "samba-tool ou list"
+                ]
+            },
+            'hq-cli': {
+                1: [
+                    "nmcli con add type ethernet con-name toRTR ifname ens18 ipv4.method auto",
+                    "nmcli con up toRTR",
+                    "ip a",
+                    "ping -c 2 192.168.200.1",
+                    "ping -c 2 192.168.100.2"
+                ],
+                2: [
+                    "mount 192.168.100.2:/raid/nfs /mnt/nfs",
+                    "df -h /mnt/nfs",
+                    "system-auth write ad au-team.irpo HQ-CLI AU-TEAM Administrator P@ssw0rd",
+                    "id hquser1"
+                ],
+                3: [
+                    "yandex-browser-stable --version",
+                    "curl -k https://web.au-team.irpo"
+                ]
+            }
+        };
+
+        let isHumanTyping = false;
+        let humanTypeTimeout = null;
+
+        async function toggleHumanTyping() {
+            const btn = document.getElementById('btn-human-type');
+            if (isHumanTyping) {
+                isHumanTyping = false;
+                if (humanTypeTimeout) clearTimeout(humanTypeTimeout);
+                btn.innerText = '⌨️ Авто-печать (270 CPM)';
+                btn.style.background = '#e63946';
+                return;
+            }
+
+            const nodeCmds = (CMD_DICT[currentEmuNode] && CMD_DICT[currentEmuNode][currentEmuModule]) 
+                ? CMD_DICT[currentEmuNode][currentEmuModule]
+                : [
+                    "hostnamectl set-hostname " + currentEmuNode,
+                    "timedatectl set-timezone Europe/Moscow",
+                    "systemctl restart network",
+                    "ip a",
+                    "ping -c 2 172.16.1.1"
+                ];
+
+            isHumanTyping = true;
+            btn.innerText = '🛑 Стоп печать (ESC)';
+            btn.style.background = '#ff0054';
+
+            const input = document.getElementById('emu-term-input');
+            const prompt = document.getElementById('emu-prompt-label').innerText;
+
+            for (let i = 0; i < nodeCmds.length; i++) {
+                if (!isHumanTyping) break;
+                const line = nodeCmds[i].trim();
+                if (!line) continue;
+
+                input.value = '';
+                for (let c = 0; c < line.length; c++) {
+                    if (!isHumanTyping) break;
+                    input.value += line[c];
+                    const ch = line[c];
+                    const delay = (ch === ' ' || '/-_.=<>:'.includes(ch)) ? 55 + Math.random()*30 : 25 + Math.random()*20;
+                    await new Promise(r => humanTypeTimeout = setTimeout(r, delay));
+                }
+
+                if (!isHumanTyping) break;
+                await new Promise(r => humanTypeTimeout = setTimeout(r, 160 + Math.random()*90));
+
+                if (!isHumanTyping) break;
+                input.value = '';
+                appendTermLine(prompt + line, 'cmd');
+                simulateCommandOutput(line);
+
+                await new Promise(r => humanTypeTimeout = setTimeout(r, 320 + Math.random()*150));
+            }
+
+            isHumanTyping = false;
+            btn.innerText = '⌨️ Авто-печать (270 CPM)';
+            btn.style.background = '#e63946';
+        }
+
+        function simulateCommandOutput(cmd) {
+            const low = cmd.toLowerCase();
+            if (low.startsWith('ping')) {
+                appendTermLine('64 bytes from target: icmp_seq=1 ttl=64 time=0.45 ms');
+                appendTermLine('64 bytes from target: icmp_seq=2 ttl=64 time=0.39 ms');
+                appendTermLine('--- ping statistics --- 2 packets transmitted, 2 received, 0% packet loss', 'ok');
+            } else if (low === 'ip a') {
+                appendTermLine('2: ens18: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP', 'info');
+                appendTermLine('    inet 192.168.100.2/27 brd 192.168.100.31 scope global ens18', 'ok');
+            } else if (low.includes('ospf nei')) {
+                appendTermLine('Neighbor ID     Pri   State           Dead Time   Address         Interface', 'sys');
+                appendTermLine('10.10.10.2        1   FULL/DR         00:00:34    10.10.10.2      tunnel.0', 'ok');
+            } else if (low.includes('domain info') || low.includes('domain provision')) {
+                appendTermLine('Domain: AU-TEAM | Realm: AU-TEAM.IRPO | Server Role: DC', 'ok');
+            } else if (low.includes('chronyc tracking')) {
+                appendTermLine('Reference ID    : 127.0.0.1 (localhost)', 'sys');
+                appendTermLine('Stratum         : 5', 'ok');
+                appendTermLine('System time     : 0.000000120 seconds slow of NTP time', 'info');
+            } else if (low.includes('df -h')) {
+                appendTermLine('/dev/md0p1        40G  1.2G   37G   4% /raid', 'ok');
+            } else if (low.includes('named-checkconf')) {
+                appendTermLine('[OK] BIND syntax verification: PASSED (0 errors)', 'ok');
+            } else if (low.includes('iptables')) {
+                appendTermLine('[OK] Rule committed to kernel packet filter.', 'ok');
+            } else if (low.includes('write')) {
+                appendTermLine('commit complete memory configuration... [OK]', 'ok');
+            }
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && isHumanTyping) {
+                isHumanTyping = false;
+                if (humanTypeTimeout) clearTimeout(humanTypeTimeout);
+                const btn = document.getElementById('btn-human-type');
+                if (btn) {
+                    btn.innerText = '⌨️ Авто-печать (270 CPM)';
+                    btn.style.background = '#e63946';
+                }
+            }
+        });
+
         let currentEmuNode = 'isp';
         let currentEmuModule = 1;
 
