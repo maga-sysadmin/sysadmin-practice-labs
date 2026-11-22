@@ -1055,6 +1055,50 @@
                 return;
             }
 
+                        // Обработка запуска офлайн-скрипта deploy_offline.sh
+            if (l.includes('deploy_offline.sh')) {
+                vm.history.push("======================================================================");
+                vm.history.push("  АВТОНОМНОЕ ОФЛАЙН-РАЗВЕРТЫВАНИЕ: УЗЕЛ [" + currentVMId.toUpperCase() + "]");
+                vm.history.push("======================================================================");
+                if (currentVMId === 'isp') {
+                    vm.history.push("[+] Настройка ISP (Шлюз Интернет, NAT, DNS, NTP)...");
+                    vm.history.push("[+] Запись конфигурации в /etc/network/interfaces (eth1: 172.16.1.2/30, eth2: 172.16.2.2/30)");
+                    vm.history.push("[+] Включение net.ipv4.ip_forward = 1 в /etc/sysctl.conf");
+                    vm.history.push("[+] Применение правил iptables NAT (MASQUERADE на eth0)...");
+                    vm.history.push("[+] Перезапуск networking.service...");
+                    vm.history.push("[OK] ISP успешно настроен в офлайн-режиме!");
+                    vm.state.configured = true;
+                } else if (currentVMId === 'hq-srv') {
+                    vm.history.push("[+] Настройка HQ-SRV (DNS, DHCP, Nextcloud, SSH:2027)...");
+                    vm.history.push("[+] Запись IP 192.168.10.2/24, GW 192.168.10.1 в /etc/network/interfaces");
+                    vm.history.push("[+] Перевод порта SSH на 2027 в /etc/ssh/sshd_config");
+                    vm.history.push("[+] Перезапуск sshd.service и networking.service...");
+                    vm.history.push("[OK] HQ-SRV успешно настроен в офлайн-режиме!");
+                    vm.state.configured = true;
+                } else if (currentVMId === 'br-srv') {
+                    vm.history.push("[+] Настройка BR-SRV (Web-сервер, Backup, SSH:2027)...");
+                    vm.history.push("[+] Запись IP 192.168.20.2/24, GW 192.168.20.1 в /etc/network/interfaces");
+                    vm.history.push("[+] Перевод порта SSH на 2027 в /etc/ssh/sshd_config");
+                    vm.history.push("[+] Перезапуск sshd.service и networking.service...");
+                    vm.history.push("[OK] BR-SRV успешно настроен в офлайн-режиме!");
+                    vm.state.configured = true;
+                } else if (currentVMId === 'hq-cli') {
+                    vm.history.push("[+] Настройка HQ-CLI (Рабочая станция администратора)...");
+                    vm.history.push("[+] Запись IP 192.168.10.100/24, GW 192.168.10.1 в /etc/network/interfaces");
+                    vm.history.push("[+] Перезапуск networking.service...");
+                    vm.history.push("[OK] HQ-CLI успешно настроен в офлайн-режиме!");
+                    vm.state.configured = true;
+                } else {
+                    vm.history.push("[+] Применение параметров маршрутизатора [" + currentVMId.toUpperCase() + "]...");
+                    vm.history.push("[OK] Конфигурация применена!");
+                    vm.state.configured = true;
+                }
+                vm.history.push("======================================================================");
+                vm.history.push("  [ГОТОВО] Конфигурация применена успешно! 100% КИМ 2027.");
+                vm.history.push("======================================================================");
+                return;
+            }
+
             // Команды аудита и спец-режимов
             if (l === 'matrix') {
                 openMatrixModal();

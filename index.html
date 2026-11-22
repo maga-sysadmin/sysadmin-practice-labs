@@ -4831,7 +4831,17 @@ rtr2()  // Копирует расширенные ACL и списки дост�
                 // Обработка симулированных команд
                 setTimeout(() => {
                     const low = val.toLowerCase();
-                    if (low === 'matrix') {
+                    if (low.includes('deploy_offline.sh')) {
+                        appendTermLine('======================================================================', 'sys');
+                        appendTermLine('  АВТОНОМНОЕ ОФЛАЙН-РАЗВЕРТЫВАНИЕ: УЗЕЛ [' + currentEmuNode.toUpperCase() + ']', 'sys');
+                        appendTermLine('======================================================================', 'sys');
+                        appendTermLine('[+] Запись сетевых настроек в /etc/network/interfaces...', 'info');
+                        appendTermLine('[+] Применение параметров безопасности и порта SSH: 2027...', 'info');
+                        appendTermLine('[+] Применение правил iptables NAT (MASQUERADE)...', 'info');
+                        appendTermLine('[+] Перезапуск системных служб networking.service и sshd...', 'info');
+                        appendTermLine('[OK] Конфигурация применена успешно! Узел готов к сдаче.', 'sys');
+                        appendTermLine('======================================================================', 'sys');
+                    } else if (low === 'matrix') {
                         openMatrixModal();
                         appendTermLine('Entering the Matrix... Wake up, Neo...', 'sys');
                     } else if (low === 'audit' || low === 'check' || low === 'test') {
