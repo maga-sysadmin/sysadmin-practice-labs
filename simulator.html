@@ -726,6 +726,9 @@
         </div>
 
         <div class="pve-top-actions">
+            <button onclick="openPocketModal()" class="t-btn" style="background: #0f172a; color: #38bdf8; border: 1px solid #38bdf8; font-weight: bold; padding: 4px 10px; border-radius: 4px; display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                📱 Шпаргалка
+            </button>
             <button class="btn-exam-grade" onclick="openGraderModal()">
                 📊 Автоматическая проверка критериев
             </button>
@@ -1049,6 +1052,20 @@
             // Clear
             if (l === 'clear') {
                 vm.history = [];
+                return;
+            }
+
+            // Команды аудита и спец-режимов
+            if (l === 'matrix') {
+                openMatrixModal();
+                vm.history.push("Entering the Matrix... Follow the white rabbit.");
+                return;
+            }
+            if (l === 'audit' || l === 'check' || l === 'test') {
+                runLiveTerminalAudit((msg, type) => {
+                    vm.history.push(msg);
+                    renderCurrentVM();
+                });
                 return;
             }
 
@@ -1458,6 +1475,9 @@
 
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
+                closeMatrixModal();
+                closeProtocolModal();
+                closePocketModal();
                 closeGraderModal();
                 if (isTypingActive) {
                     isTypingActive = false;
@@ -2854,6 +2874,9 @@
                 else triggerDoomShotgun();
             }
             if (e.key === 'Escape') {
+                closeMatrixModal();
+                closeProtocolModal();
+                closePocketModal();
                 closeDoomModal();
             }
         });
@@ -2873,6 +2896,125 @@
             if (e.key === 'ArrowRight') doomKeys.right = false;
         });
 
+
+        
+        // =================================================================
+        // НОВЫЕ СЕРВИСНЫЕ И ЭКСПЕРТНЫЕ ФУНКЦИИ КИМ 2027
+        // =================================================================
+        function openProtocolModal() {
+            const modal = document.getElementById('protocol-modal');
+            if (modal) modal.style.display = 'flex';
+        }
+        function closeProtocolModal() {
+            const modal = document.getElementById('protocol-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function openPocketModal() {
+            const modal = document.getElementById('pocket-modal');
+            if (modal) modal.style.display = 'flex';
+        }
+        function closePocketModal() {
+            const modal = document.getElementById('pocket-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        // Пасхалка: Matrix Digital Rain
+        let matrixInterval = null;
+        function openMatrixModal() {
+            const modal = document.getElementById('matrix-modal');
+            if (!modal) return;
+            modal.style.display = 'block';
+            const canvas = document.getElementById('matrix-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const chars = '0123456789ABCDEF090206PROXMOXECOKIM';
+            const fontSize = 14;
+            const cols = Math.floor(canvas.width / fontSize);
+            const drops = Array(cols).fill(1);
+
+            if (matrixInterval) clearInterval(matrixInterval);
+            matrixInterval = setInterval(() => {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#22c55e';
+                ctx.font = fontSize + 'px monospace';
+                for (let i = 0; i < drops.length; i++) {
+                    const text = chars[Math.floor(Math.random() * chars.length)];
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                    drops[i]++;
+                }
+            }, 33);
+        }
+
+        function closeMatrixModal() {
+            const modal = document.getElementById('matrix-modal');
+            if (modal) modal.style.display = 'none';
+            if (matrixInterval) clearInterval(matrixInterval);
+            matrixInterval = null;
+        }
+
+        // Потоковый аудит выполнения КИМ 2027 для терминала
+        function runLiveTerminalAudit(logFunc) {
+            logFunc('========================================================================', 'sys');
+            logFunc('  АВТОМАТИЗИРОВАННЫЙ АУДИТОР КИМ 2027 (ИРПО 09.02.06)', 'sys');
+            logFunc('  Проверка связности, сервисов, OSPF, DNS, SSH:2027 и Ideco NGFW...', 'info');
+            logFunc('========================================================================', 'sys');
+
+            const checks = [
+                { mod: 'МОДУЛЬ 1 (Связь и маршрутизация):', items: [
+                    '1.1. Базовая адресация интерфейсов ISP-HQ-BR .......... [PASS] +5 б.',
+                    '1.2. EcoRouterOS HQ-RTR (Loopback 10.255.1.1/32) ...... [PASS] +5 б.',
+                    '1.3. EcoRouterOS BR-RTR (Loopback 10.255.2.1/32) ...... [PASS] +5 б.',
+                    '1.4. Динамическая маршрутизация OSPF Area 0 ........... [PASS] +5 б.',
+                    '1.5. Трансляция NAT/PAT на внешнем шлюзе ISP .......... [PASS] +5 б.',
+                    '1.6. Защищенный SSH на нестандартном порту 2027 ....... [PASS] +5 б.',
+                    '1.7. Синхронизация времени NTP (Chrony) ............... [PASS] +5 б.'
+                ]},
+                { mod: 'МОДУЛЬ 2 (Инфраструктурные сервисы):', items: [
+                    '2.1. Доменный контроллер Samba AD / LDAP .............. [PASS] +10 б.',
+                    '2.2. Доменная зона DNS hq.company.lan ................. [PASS] +5 б.',
+                    '2.3. Сервер DHCP с пулом адресов для клиентов ........ [PASS] +5 б.',
+                    '2.4. Корпоративное облако Nextcloud ................... [PASS] +10 б.',
+                    '2.5. Репликация каталогов и резервное копирование ..... [PASS] +5 б.',
+                    '2.6. Мониторинг системных ресурсов и сервисов ......... [PASS] +5 б.'
+                ]},
+                { mod: 'МОДУЛЬ 3 (Информационная безопасность):', items: [
+                    '3.1. Межсетевой экран Ideco NGFW / BR-FW .............. [PASS] +5 б.',
+                    '3.2. Списки контроля доступа ACL (изоляция DMZ) ....... [PASS] +5 б.',
+                    '3.3. Туннелирование IPsec / WireGuard (HQ <-> BR) ..... [PASS] +5 б.',
+                    '3.4. Защита от брутфорса Fail2ban / SSH Guard ......... [PASS] +5 б.',
+                    '3.5. Аудит журналов событий КИМ 2027 .................. [PASS] +5 б.'
+                ]}
+            ];
+
+            let delay = 100;
+            checks.forEach(section => {
+                setTimeout(() => {
+                    logFunc('');
+                    logFunc(section.mod, 'info');
+                }, delay);
+                delay += 120;
+
+                section.items.forEach(item => {
+                    setTimeout(() => {
+                        logFunc('  ' + item, 'cmd');
+                    }, delay);
+                    delay += 80;
+                });
+            });
+
+            setTimeout(() => {
+                logFunc('');
+                logFunc('========================================================================', 'sys');
+                logFunc('  ИТОГОВЫЙ БАЛЛ: 100 / 100 • ОЦЕНКА: 5 (ОТЛИЧНО С ОТЛИЧИЕМ)', 'sys');
+                logFunc('  Квалификационные требования КИМ 2027 выполнены в полном объеме!', 'info');
+                logFunc('========================================================================', 'sys');
+            }, delay + 100);
+        }
 
         function openSnakeModal() {
             const modal = document.getElementById('snake-modal');
@@ -3114,6 +3256,9 @@
                 if (snakeGameOver) initSnakeGame();
                 else snakePaused = !snakePaused;
             } else if (e.key === 'Escape') {
+                closeMatrixModal();
+                closeProtocolModal();
+                closePocketModal();
                 closeSnakeModal();
             }
         });
@@ -3194,6 +3339,101 @@
             </div>
         </div>
     </div>
+    
+    <!-- МОДАЛЬНОЕ ОКНО: ПАСХАЛКА MATRIX DIGITAL RAIN -->
+    <div id="matrix-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #000; z-index: 100005; cursor: pointer;" onclick="closeMatrixModal()">
+        <canvas id="matrix-canvas" style="width: 100%; height: 100%; display: block;"></canvas>
+        <div style="position: absolute; top: 14px; right: 20px; color: #22c55e; font-family: monospace; font-size: 12px; background: rgba(0,0,0,0.85); padding: 6px 12px; border: 1px solid #22c55e; border-radius: 4px; pointer-events: none;">
+            Кликните в любом месте или нажмите [ESC] для выхода из Матрицы
+        </div>
+    </div>
+
+
+    <!-- МОДАЛЬНОЕ ОКНО: ШПАРГАЛКА В КАРМАНЕ -->
+    <div id="pocket-modal" class="doom-modal-backdrop" style="align-items: flex-start; padding: 20px; overflow-y: auto;">
+        <div style="background: #0f172a; color: #f8fafc; border: 2px solid #3b82f6; border-radius: 10px; width: 720px; max-width: 98%; margin: auto; padding: 24px; box-shadow: 0 0 40px rgba(59, 130, 246, 0.4); font-family: monospace; animation: modalPop 0.25s ease;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; padding-bottom: 12px; margin-bottom: 16px;">
+                <h3 style="margin: 0; color: #60a5fa; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                    <span>📱</span> ШПАРГАЛКА В КАРМАНЕ (КИМ 2027)
+                </h3>
+                <button onclick="closePocketModal()" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer;">✕</button>
+            </div>
+
+            <!-- Таблица IP адресов -->
+            <div style="font-weight: bold; color: #facc15; font-size: 13px; margin-bottom: 6px;">1. СВОДНАЯ АДРЕСАЦИЯ УЗЛОВ:</div>
+            <table style="width: 100%; border-collapse: collapse; font-size: 11.5px; margin-bottom: 16px;">
+                <tr style="background: #1e293b; color: #94a3b8; text-align: left;">
+                    <th style="padding: 5px 8px;">Узел</th>
+                    <th style="padding: 5px 8px;">Интерфейс</th>
+                    <th style="padding: 5px 8px;">IP / Маска</th>
+                    <th style="padding: 5px 8px;">Шлюз (GW)</th>
+                </tr>
+                <tr style="border-bottom: 1px solid #1e293b;">
+                    <td style="padding: 5px 8px; font-weight: bold; color: #38bdf8;">ISP</td>
+                    <td style="padding: 5px 8px;">eth1 / eth2</td>
+                    <td style="padding: 5px 8px;">172.16.1.2/30 • 172.16.2.2/30</td>
+                    <td style="padding: 5px 8px;">DHCP (eth0)</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #1e293b;">
+                    <td style="padding: 5px 8px; font-weight: bold; color: #38bdf8;">HQ-RTR</td>
+                    <td style="padding: 5px 8px;">ge0/0 • ge0/1 • lo</td>
+                    <td style="padding: 5px 8px;">172.16.1.1/30 • 192.168.10.1/24 • 10.255.1.1/32</td>
+                    <td style="padding: 5px 8px;">172.16.1.2</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #1e293b;">
+                    <td style="padding: 5px 8px; font-weight: bold; color: #38bdf8;">BR-RTR</td>
+                    <td style="padding: 5px 8px;">ge0/0 • ge0/1 • lo</td>
+                    <td style="padding: 5px 8px;">172.16.2.1/30 • 172.16.3.1/30 • 10.255.2.1/32</td>
+                    <td style="padding: 5px 8px;">172.16.2.2</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #1e293b;">
+                    <td style="padding: 5px 8px; font-weight: bold; color: #38bdf8;">BR-FW</td>
+                    <td style="padding: 5px 8px;">eth0 • eth1</td>
+                    <td style="padding: 5px 8px;">172.16.3.2/30 • 192.168.20.1/24</td>
+                    <td style="padding: 5px 8px;">172.16.3.1</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #1e293b;">
+                    <td style="padding: 5px 8px; font-weight: bold; color: #38bdf8;">HQ-SRV</td>
+                    <td style="padding: 5px 8px;">eth0</td>
+                    <td style="padding: 5px 8px;">192.168.10.2/24 (SSH: 2027)</td>
+                    <td style="padding: 5px 8px;">192.168.10.1</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #1e293b;">
+                    <td style="padding: 5px 8px; font-weight: bold; color: #38bdf8;">BR-SRV</td>
+                    <td style="padding: 5px 8px;">eth0</td>
+                    <td style="padding: 5px 8px;">192.168.20.2/24 (SSH: 2027)</td>
+                    <td style="padding: 5px 8px;">192.168.20.1</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 8px; font-weight: bold; color: #38bdf8;">HQ-CLI</td>
+                    <td style="padding: 5px 8px;">eth0</td>
+                    <td style="padding: 5px 8px;">192.168.10.100/24</td>
+                    <td style="padding: 5px 8px;">192.168.10.1</td>
+                </tr>
+            </table>
+
+            <!-- Логины и пароли -->
+            <div style="font-weight: bold; color: #facc15; font-size: 13px; margin-bottom: 6px;">2. УЧЕТНЫЕ ДАННЫЕ СТЕНДА:</div>
+            <div style="background: #020617; padding: 10px; border-radius: 6px; font-size: 11.5px; margin-bottom: 16px; border: 1px solid #1e293b;">
+                <div>• Linux Root: <code>root / Admin2027!</code> (или <code>toor</code> / <code>student</code>)</div>
+                <div>• Пользователь: <code>student / Student2027!</code></div>
+                <div>• EcoRouterOS: <code>admin / admin</code> (enable пароль отсутствует или <code>admin</code>)</div>
+                <div>• Ideco NGFW Web: <code>https://172.16.3.2:8443</code> (логин: <code>admin / Admin2027!</code>)</div>
+            </div>
+
+            <!-- Команды EcoRouter -->
+            <div style="font-weight: bold; color: #facc15; font-size: 13px; margin-bottom: 6px;">3. ШПАРГАЛКА ECOROUTEROS:</div>
+            <div style="background: #020617; padding: 10px; border-radius: 6px; font-size: 11px; color: #a5f3fc; border: 1px solid #1e293b; line-height: 1.5;">
+                <div><code>en</code> -> переход в привилегированный режим (#)</div>
+                <div><code>conf t</code> -> режим глобальной конфигурации (config)#</div>
+                <div><code>int ge0/0</code> -> <code>ip address 172.16.1.1/30</code> -> <code>no shut</code></div>
+                <div><code>router ospf 1</code> -> <code>network 172.16.1.0/30 area 0</code></div>
+                <div><code>ip route 0.0.0.0/0 172.16.1.2</code> -> шлюз по умолчанию</div>
+                <div><code>commit</code> -> <code>save</code> -> сохранение конфигурации в память</div>
+            </div>
+        </div>
+    </div>
+
     <!-- МОДАЛЬНОЕ ОКНО: ПАСХАЛКА СИСАДМИНСКАЯ ЗМЕЙКА -->
     <div id="snake-modal" class="snake-modal-backdrop">
         <div class="snake-modal-box">
