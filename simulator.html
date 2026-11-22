@@ -641,12 +641,6 @@
         </div>
 
         <div class="pve-top-actions">
-            <button onclick="openDoomModal()" class="t-btn" style="background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%); color: #fef08a; border: 1px solid #ef4444; font-weight: bold; padding: 4px 10px; border-radius: 4px; display: flex; align-items: center; gap: 5px; cursor: pointer; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);">
-                👹 DOOM (1993)
-            </button>
-            <button onclick="openSnakeModal()" class="t-btn" style="background: linear-gradient(135deg, #065f46 0%, #047857 100%); color: #ecfdf5; border: 1px solid #10b981; font-weight: bold; padding: 4px 10px; border-radius: 4px; display: flex; align-items: center; gap: 5px; cursor: pointer;">
-                🕹️ Змейка
-            </button>
             <button class="btn-exam-grade" onclick="openGraderModal()">
                 📊 Автоматическая проверка критериев
             </button>
@@ -973,15 +967,22 @@
                 return;
             }
 
-            // Пасхалки
-            if (l === 'doom') {
+            // Пасхалки для избранных
+            if (l === 'doom' || l === 'iddqd' || l === 'idkfa' || l === 'e1m1') {
                 openDoomModal();
-                vm.history.push("Starting DOOM 1993... SoundBlaster 16 OK... E1M1: Hangar READY!");
+                vm.history.push("👹 [CLASSIFIED ACCESS] Starting DOOM 1993 (id Software)... SoundBlaster 16 OK... E1M1: Hangar READY!");
                 return;
             }
-            if (l === 'snake') {
+            if (l === 'snake' || l === 'cat6e') {
                 openSnakeModal();
-                vm.history.push("SYSADMIN PACKET SNAKE v1.0 running...");
+                vm.history.push("🐍 [CLASSIFIED ACCESS] SYSADMIN PACKET SNAKE v1.0 running in background...");
+                return;
+            }
+            if (l === 'games' || l === 'game' || l === 'secret') {
+                vm.history.push("🔐 [RESTRICTED ACCESS] Секретные протоколы для избранных:");
+                vm.history.push("   • doom  (или iddqd) - DOOM 1993 Raycaster E1M1");
+                vm.history.push("   • snake (или cat6e) - Sysadmin Packet Snake v1.0");
+                vm.history.push("   • Горячие клавиши: Ctrl+Alt+D (DOOM), Ctrl+Alt+S (Змейка)");
                 return;
             }
 
@@ -2270,6 +2271,9 @@
             if (!modal || modal.style.display !== 'flex') {
                 if (e.key.toLowerCase() === 's' && e.ctrlKey && e.altKey) {
                     openSnakeModal();
+                }
+                if (e.key.toLowerCase() === 'd' && e.ctrlKey && e.altKey) {
+                    openDoomModal();
                 }
                 return;
             }

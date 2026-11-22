@@ -956,12 +956,6 @@
 
     <!-- БЫСТРЫЕ ССЫЛКИ -->
     <div class="quick-links">
-        <a href="javascript:void(0)" onclick="openDoomModal()" class="btn-link" style="background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%); border-color: #ef4444; box-shadow: 0 0 14px rgba(239, 68, 68, 0.4); font-weight: 800;">
-            👹 DOOM (1993)
-        </a>
-        <a href="javascript:void(0)" onclick="openSnakeModal()" class="btn-link" style="background: linear-gradient(135deg, #065f46 0%, #047857 100%); border-color: #10b981; box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);">
-            🕹️ Sysadmin Snake (Пасхалка)
-        </a>
         <a href="javascript:void(0)" onclick="switchTab('emu', document.getElementById('tab-btn-emu'))" class="btn-link btn-sim">
             🖥️ Интерактивный эмулятор терминала
         </a>
@@ -3608,6 +3602,9 @@ rtr2()  // Копирует расширенные ACL и списки дост�
                 if (e.key.toLowerCase() === 's' && e.ctrlKey && e.altKey) {
                     openSnakeModal();
                 }
+                if (e.key.toLowerCase() === 'd' && e.ctrlKey && e.altKey) {
+                    openDoomModal();
+                }
                 return;
             }
 
@@ -3640,12 +3637,17 @@ rtr2()  // Копирует расширенные ACL и списки дост�
                 // Обработка симулированных команд
                 setTimeout(() => {
                     const low = val.toLowerCase();
-                    if (low === 'doom') {
+                    if (low === 'doom' || low === 'iddqd' || low === 'idkfa' || low === 'e1m1') {
                         openDoomModal();
-                        appendTermLine('Запуск DOOM (1993)... Init SoundBlaster 16... E1M1: Hangar READY!', 'sys');
-                    } else if (low === 'snake') {
+                        appendTermLine('👹 [CLASSIFIED ACCESS] Запуск DOOM (1993)... Init SoundBlaster 16... E1M1: Hangar READY!', 'sys');
+                    } else if (low === 'snake' || low === 'cat6e') {
                         openSnakeModal();
-                        appendTermLine('Запуск сисадминской змейки: SYSADMIN PACKET SNAKE v1.0...', 'sys');
+                        appendTermLine('🐍 [CLASSIFIED ACCESS] Запуск сисадминской змейки: SYSADMIN PACKET SNAKE v1.0...', 'sys');
+                    } else if (low === 'games' || low === 'game' || low === 'secret') {
+                        appendTermLine('🔐 [RESTRICTED ACCESS] Секретные протоколы терминала для избранных:', 'info');
+                        appendTermLine('   • doom  (или iddqd) - DOOM 1993 Raycaster E1M1', 'sys');
+                        appendTermLine('   • snake (или cat6e) - Sysadmin Packet Snake v1.0', 'sys');
+                        appendTermLine('   • Горячие клавиши: Ctrl+Alt+D (DOOM), Ctrl+Alt+S (Змейка)', 'info');
                     } else if (low === 'clear') {
                         clearEmuTerminal();
                     } else if (low.startsWith('ping')) {
