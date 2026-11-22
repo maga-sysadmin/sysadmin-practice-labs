@@ -391,6 +391,135 @@
             text-align: right;
         }
     
+        /* Стили для Пасхалки: DOOM 1993 Raycaster */
+        .doom-modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(8px);
+            z-index: 100000;
+            align-items: center;
+            justify-content: center;
+        }
+        .doom-modal-box {
+            background: #111;
+            border: 2px solid #ef4444;
+            border-radius: 10px;
+            box-shadow: 0 0 40px rgba(239, 68, 68, 0.5), inset 0 0 20px rgba(0,0,0,0.8);
+            width: 660px;
+            max-width: 96%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: modalPop 0.25s ease;
+        }
+        .doom-titlebar {
+            background: linear-gradient(90deg, #7f1d1d 0%, #3b0764 100%);
+            padding: 8px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #ef4444;
+        }
+        .doom-titlebar h3 {
+            color: #fef08a;
+            font-family: monospace;
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+            text-shadow: 0 0 6px rgba(245, 158, 11, 0.8);
+        }
+        .doom-screen-wrap {
+            position: relative;
+            background: #000;
+            width: 100%;
+            height: 380px;
+            cursor: crosshair;
+        }
+        #doom-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            image-rendering: pixelated;
+        }
+        /* Статус-бар DOOM */
+        .doom-statusbar {
+            background: #262626;
+            border-top: 3px solid #404040;
+            border-bottom: 2px solid #171717;
+            padding: 6px 12px;
+            display: grid;
+            grid-template-columns: 80px 100px 90px 100px 1fr;
+            align-items: center;
+            gap: 6px;
+            font-family: monospace;
+            text-align: center;
+            user-select: none;
+        }
+        .doom-hud-block {
+            background: #171717;
+            border: 1px solid #525252;
+            border-radius: 4px;
+            padding: 3px 6px;
+        }
+        .doom-hud-val {
+            font-size: 18px;
+            font-weight: 900;
+            color: #ef4444;
+            text-shadow: 0 0 4px #dc2626;
+        }
+        .doom-hud-lbl {
+            font-size: 9px;
+            color: #a3a3a3;
+            text-transform: uppercase;
+        }
+        .doom-face-wrap {
+            background: #404040;
+            border: 2px solid #737373;
+            border-radius: 4px;
+            width: 50px;
+            height: 44px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .doom-controls-bar {
+            background: #141414;
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: monospace;
+            font-size: 11px;
+            color: #a3a3a3;
+            border-top: 1px solid #262626;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .doom-btn-shoot {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 4px;
+            font-weight: 900;
+            font-family: monospace;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+        }
+        .doom-btn-shoot:active {
+            background: #dc2626;
+            transform: scale(0.96);
+        }
+
+        
         /* Стили для Пасхалки: Сисадминская Змейка */
         .snake-modal-backdrop {
             display: none;
@@ -512,6 +641,9 @@
         </div>
 
         <div class="pve-top-actions">
+            <button onclick="openDoomModal()" class="t-btn" style="background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%); color: #fef08a; border: 1px solid #ef4444; font-weight: bold; padding: 4px 10px; border-radius: 4px; display: flex; align-items: center; gap: 5px; cursor: pointer; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);">
+                👹 DOOM (1993)
+            </button>
             <button onclick="openSnakeModal()" class="t-btn" style="background: linear-gradient(135deg, #065f46 0%, #047857 100%); color: #ecfdf5; border: 1px solid #10b981; font-weight: bold; padding: 4px 10px; border-radius: 4px; display: flex; align-items: center; gap: 5px; cursor: pointer;">
                 🕹️ Змейка
             </button>
@@ -838,6 +970,18 @@
             // Clear
             if (l === 'clear') {
                 vm.history = [];
+                return;
+            }
+
+            // Пасхалки
+            if (l === 'doom') {
+                openDoomModal();
+                vm.history.push("Starting DOOM 1993... SoundBlaster 16 OK... E1M1: Hangar READY!");
+                return;
+            }
+            if (l === 'snake') {
+                openSnakeModal();
+                vm.history.push("SYSADMIN PACKET SNAKE v1.0 running...");
                 return;
             }
 
@@ -1390,6 +1534,522 @@
         let snakePaused = false;
         let snakeSpeed = 110;
 
+        // =================================================================
+        // ПАСХАЛКА: ПОЛНОЦЕННЫЙ 3D RAYCASTER DOOM 1993 (id Software)
+        // =================================================================
+        let doomCanvas = null;
+        let doomCtx = null;
+        let doomFaceCanvas = null;
+        let doomFaceCtx = null;
+        let doomLoopTimer = null;
+        let doomAudioCtx = null;
+        let doomMusicPlaying = true;
+        let doomMusicStep = 0;
+        let doomMusicTimer = null;
+
+        // Карта E1M1 (16x16)
+        const DOOM_MAP = [
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+            [1,0,2,2,0,0,1,0,3,3,3,0,0,0,0,1],
+            [1,0,2,0,0,0,0,0,0,0,3,0,0,0,0,1],
+            [1,0,2,0,0,0,1,0,0,0,3,0,0,0,0,1],
+            [1,0,0,0,0,0,1,1,0,1,1,0,0,0,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,1,1,0,1,1,1,0,0,0,0,0,0,0,0,1],
+            [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+            [1,0,3,0,0,0,1,0,2,2,2,0,0,0,0,1],
+            [1,0,3,0,0,0,0,0,2,0,2,0,0,0,0,1],
+            [1,0,3,3,0,0,1,0,2,0,2,0,0,0,0,1],
+            [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+            [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
+
+        // Игрок (Doomguy)
+        let player = {
+            x: 2.5,
+            y: 2.5,
+            dirX: 1,
+            dirY: 0,
+            planeX: 0,
+            planeY: 0.66,
+            ammo: 50,
+            health: 100,
+            armor: 100,
+            kills: 0,
+            shotgunAnim: 0,
+            faceEyeDir: 0
+        };
+
+        // Враги (Импы)
+        let doomSprites = [
+            { x: 5.5, y: 3.5, hp: 40, dead: false, type: 'imp' },
+            { x: 12.5, y: 3.5, hp: 40, dead: false, type: 'imp' },
+            { x: 8.5, y: 6.5, hp: 40, dead: false, type: 'imp' },
+            { x: 4.5, y: 10.5, hp: 40, dead: false, type: 'imp' },
+            { x: 11.5, y: 10.5, hp: 40, dead: false, type: 'imp' },
+            { x: 13.5, y: 13.5, hp: 40, dead: false, type: 'imp' }
+        ];
+
+        let doomKeys = { w: false, s: false, a: false, d: false, left: false, right: false };
+
+        function openDoomModal() {
+            const modal = document.getElementById('doom-modal');
+            if (!modal) return;
+            modal.style.display = 'flex';
+            initDoomGame();
+        }
+
+        function closeDoomModal() {
+            const modal = document.getElementById('doom-modal');
+            if (modal) modal.style.display = 'none';
+            if (doomLoopTimer) cancelAnimationFrame(doomLoopTimer);
+            if (doomMusicTimer) clearInterval(doomMusicTimer);
+            doomLoopTimer = null;
+        }
+
+        function initDoomGame() {
+            doomCanvas = document.getElementById('doom-canvas');
+            if (!doomCanvas) return;
+            doomCtx = doomCanvas.getContext('2d');
+
+            doomFaceCanvas = document.getElementById('doom-face-canvas');
+            if (doomFaceCanvas) doomFaceCtx = doomFaceCanvas.getContext('2d');
+
+            player.x = 2.5;
+            player.y = 2.5;
+            player.dirX = 1;
+            player.dirY = 0;
+            player.planeX = 0;
+            player.planeY = 0.66;
+            player.ammo = 50;
+            player.health = 100;
+            player.armor = 100;
+            player.kills = 0;
+            player.shotgunAnim = 0;
+
+            doomSprites.forEach(s => { s.hp = 40; s.dead = false; });
+            updateDoomHUD();
+            drawDoomFace();
+
+            startDoomAudio();
+            if (doomLoopTimer) cancelAnimationFrame(doomLoopTimer);
+            lastFrameTime = performance.now();
+            requestAnimationFrame(doomGameLoop);
+        }
+
+        let lastFrameTime = performance.now();
+
+        function doomGameLoop(now) {
+            const modal = document.getElementById('doom-modal');
+            if (!modal || modal.style.display !== 'flex') return;
+
+            const dt = Math.min((now - lastFrameTime) / 1000, 0.1);
+            lastFrameTime = now;
+
+            updateDoomPhysics(dt);
+            renderDoomRaycaster();
+            drawDoomFace();
+
+            requestAnimationFrame(doomGameLoop);
+        }
+
+        function updateDoomPhysics(dt) {
+            const moveSpeed = 3.2 * dt;
+            const rotSpeed = 2.4 * dt;
+
+            // Поворот
+            if (doomKeys.a || doomKeys.left) {
+                const oldDirX = player.dirX;
+                player.dirX = player.dirX * Math.cos(-rotSpeed) - player.dirY * Math.sin(-rotSpeed);
+                player.dirY = oldDirX * Math.sin(-rotSpeed) + player.dirY * Math.cos(-rotSpeed);
+                const oldPlaneX = player.planeX;
+                player.planeX = player.planeX * Math.cos(-rotSpeed) - player.planeY * Math.sin(-rotSpeed);
+                player.planeY = oldPlaneX * Math.sin(-rotSpeed) + player.planeY * Math.cos(-rotSpeed);
+            }
+            if (doomKeys.d || doomKeys.right) {
+                const oldDirX = player.dirX;
+                player.dirX = player.dirX * Math.cos(rotSpeed) - player.dirY * Math.sin(rotSpeed);
+                player.dirY = oldDirX * Math.sin(rotSpeed) + player.dirY * Math.cos(rotSpeed);
+                const oldPlaneX = player.planeX;
+                player.planeX = player.planeX * Math.cos(rotSpeed) - player.planeY * Math.sin(rotSpeed);
+                player.planeY = oldPlaneX * Math.sin(rotSpeed) + player.planeY * Math.cos(rotSpeed);
+            }
+
+            // Движение вперед / назад
+            if (doomKeys.w) {
+                const nextX = player.x + player.dirX * moveSpeed;
+                const nextY = player.y + player.dirY * moveSpeed;
+                if (DOOM_MAP[Math.floor(nextY)][Math.floor(nextX)] === 0) {
+                    player.x = nextX;
+                    player.y = nextY;
+                }
+            }
+            if (doomKeys.s) {
+                const nextX = player.x - player.dirX * moveSpeed;
+                const nextY = player.y - player.dirY * moveSpeed;
+                if (DOOM_MAP[Math.floor(nextY)][Math.floor(nextX)] === 0) {
+                    player.x = nextX;
+                    player.y = nextY;
+                }
+            }
+
+            if (player.shotgunAnim > 0) {
+                player.shotgunAnim -= dt * 5;
+                if (player.shotgunAnim < 0) player.shotgunAnim = 0;
+            }
+        }
+
+        function renderDoomRaycaster() {
+            if (!doomCtx) return;
+            const w = doomCanvas.width;
+            const h = doomCanvas.height;
+
+            // Потолок и Пол
+            doomCtx.fillStyle = '#1c1917'; // Потолок
+            doomCtx.fillRect(0, 0, w, h / 2);
+            doomCtx.fillStyle = '#292524'; // Пол
+            doomCtx.fillRect(0, h / 2, w, h / 2);
+
+            const zBuffer = [];
+
+            // Рейкастинг стен (DDA)
+            for (let x = 0; x < w; x++) {
+                const cameraX = 2 * x / w - 1;
+                const rayDirX = player.dirX + player.planeX * cameraX;
+                const rayDirY = player.dirY + player.planeY * cameraX;
+
+                let mapX = Math.floor(player.x);
+                let mapY = Math.floor(player.y);
+
+                const deltaDistX = Math.abs(1 / rayDirX);
+                const deltaDistY = Math.abs(1 / rayDirY);
+
+                let stepX, stepY;
+                let sideDistX, sideDistY;
+
+                if (rayDirX < 0) {
+                    stepX = -1;
+                    sideDistX = (player.x - mapX) * deltaDistX;
+                } else {
+                    stepX = 1;
+                    sideDistX = (mapX + 1.0 - player.x) * deltaDistX;
+                }
+                if (rayDirY < 0) {
+                    stepY = -1;
+                    sideDistY = (player.y - mapY) * deltaDistY;
+                } else {
+                    stepY = 1;
+                    sideDistY = (mapY + 1.0 - player.y) * deltaDistY;
+                }
+
+                let hit = 0;
+                let side = 0;
+                while (hit === 0) {
+                    if (sideDistX < sideDistY) {
+                        sideDistX += deltaDistX;
+                        mapX += stepX;
+                        side = 0;
+                    } else {
+                        sideDistY += deltaDistY;
+                        mapY += stepY;
+                        side = 1;
+                    }
+                    if (DOOM_MAP[mapY] && DOOM_MAP[mapY][mapX] > 0) hit = 1;
+                }
+
+                let perpWallDist;
+                if (side === 0) perpWallDist = (mapX - player.x + (1 - stepX) / 2) / rayDirX;
+                else perpWallDist = (mapY - player.y + (1 - stepY) / 2) / rayDirY;
+
+                zBuffer[x] = perpWallDist;
+
+                const lineHeight = Math.floor(h / perpWallDist);
+                const drawStart = Math.max(0, -lineHeight / 2 + h / 2);
+                const drawEnd = Math.min(h - 1, lineHeight / 2 + h / 2);
+
+                const wallType = DOOM_MAP[mapY][mapX];
+                let color;
+                if (wallType === 1) color = side === 1 ? '#475569' : '#64748b'; // Серый металл
+                else if (wallType === 2) color = side === 1 ? '#7f1d1d' : '#991b1b'; // Кирпич E1M1
+                else color = side === 1 ? '#b45309' : '#d97706'; // Опасная зона
+
+                // Затенение по расстоянию (Fog)
+                const shade = Math.max(0.2, Math.min(1, 1.8 / perpWallDist));
+                doomCtx.fillStyle = color;
+                doomCtx.globalAlpha = shade;
+                doomCtx.fillRect(x, drawStart, 1, drawEnd - drawStart);
+                doomCtx.globalAlpha = 1.0;
+            }
+
+            // Отрисовка спрайтов (Импы)
+            doomSprites.forEach(sprite => {
+                const spriteX = sprite.x - player.x;
+                const spriteY = sprite.y - player.y;
+
+                const invDet = 1.0 / (player.planeX * player.dirY - player.dirX * player.planeY);
+                const transformX = invDet * (player.dirY * spriteX - player.dirX * spriteY);
+                const transformY = invDet * (-player.planeY * spriteX + player.planeX * spriteY);
+
+                if (transformY <= 0.2) return;
+
+                const spriteScreenX = Math.floor((w / 2) * (1 + transformX / transformY));
+                const spriteHeight = Math.abs(Math.floor(h / transformY));
+                const drawStartY = Math.max(0, -spriteHeight / 2 + h / 2);
+                const drawEndY = Math.min(h - 1, spriteHeight / 2 + h / 2);
+                const spriteWidth = Math.abs(Math.floor(h / transformY));
+                const drawStartX = Math.max(0, -spriteWidth / 2 + spriteScreenX);
+                const drawEndX = Math.min(w - 1, spriteWidth / 2 + spriteScreenX);
+
+                for (let stripe = drawStartX; stripe < drawEndX; stripe++) {
+                    if (transformY < zBuffer[stripe]) {
+                        if (sprite.dead) {
+                            // Кровавое пятно
+                            doomCtx.fillStyle = '#7f1d1d';
+                            doomCtx.fillRect(stripe, drawEndY - 8, 1, 8);
+                        } else {
+                            // Импы
+                            const shade = Math.max(0.2, Math.min(1, 1.8 / transformY));
+                            doomCtx.fillStyle = '#ea580c'; // Коричнево-оранжевый имп
+                            doomCtx.globalAlpha = shade;
+                            doomCtx.fillRect(stripe, drawStartY + 10, 1, drawEndY - drawStartY - 10);
+                            doomCtx.globalAlpha = 1.0;
+                        }
+                    }
+                }
+            });
+
+            // Отрисовка дробовика (Shotgun)
+            drawDoomShotgun(w, h);
+        }
+
+        function drawDoomShotgun(w, h) {
+            const anim = player.shotgunAnim;
+            const gunY = h - 65 + anim * 25;
+            const gunX = w / 2;
+
+            // Вспышка выстрела
+            if (anim > 0.6) {
+                doomCtx.fillStyle = '#fef08a';
+                doomCtx.beginPath();
+                doomCtx.arc(gunX, gunY - 20, 22, 0, Math.PI * 2);
+                doomCtx.fill();
+                doomCtx.fillStyle = '#f97316';
+                doomCtx.beginPath();
+                doomCtx.arc(gunX, gunY - 20, 12, 0, Math.PI * 2);
+                doomCtx.fill();
+            }
+
+            // Стволы дробовика
+            doomCtx.fillStyle = '#171717';
+            doomCtx.fillRect(gunX - 12, gunY - 10, 10, 60);
+            doomCtx.fillRect(gunX + 2, gunY - 10, 10, 60);
+
+            doomCtx.fillStyle = '#404040';
+            doomCtx.fillRect(gunX - 10, gunY - 8, 6, 56);
+            doomCtx.fillRect(gunX + 4, gunY - 8, 6, 56);
+
+            // Рукоятка / цевье
+            doomCtx.fillStyle = '#78350f';
+            doomCtx.fillRect(gunX - 15, gunY + 20, 30, 25);
+        }
+
+        function triggerDoomShotgun() {
+            if (player.ammo <= 0 || player.shotgunAnim > 0) return;
+
+            player.ammo -= 1;
+            player.shotgunAnim = 1.0;
+            updateDoomHUD();
+            playDoomShotSound();
+
+            // Проверка попадания в импа
+            let hitIndex = -1;
+            let minDist = 999;
+            doomSprites.forEach((sprite, idx) => {
+                if (sprite.dead) return;
+                const dx = sprite.x - player.x;
+                const dy = sprite.y - player.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx);
+                const playerAngle = Math.atan2(player.dirY, player.dirX);
+                let diff = Math.abs(angle - playerAngle);
+                if (diff > Math.PI) diff = Math.PI * 2 - diff;
+
+                if (diff < 0.28 && dist < minDist) {
+                    minDist = dist;
+                    hitIndex = idx;
+                }
+            });
+
+            if (hitIndex !== -1) {
+                const target = doomSprites[hitIndex];
+                target.hp -= 40;
+                if (target.hp <= 0) {
+                    target.dead = true;
+                    player.kills += 1;
+                    updateDoomHUD();
+                    playDoomMonsterDeath();
+                }
+            }
+        }
+
+        function drawDoomFace() {
+            if (!doomFaceCtx) return;
+            const ctx = doomFaceCtx;
+            ctx.fillStyle = '#eab308'; // Кожа
+            ctx.fillRect(0, 0, 36, 36);
+
+            // Волосы
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(4, 2, 28, 8);
+
+            // Глаза
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(8, 14, 6, 5);
+            ctx.fillRect(22, 14, 6, 5);
+
+            ctx.fillStyle = '#000';
+            const eyeOffset = player.shotgunAnim > 0.2 ? 1 : 0;
+            ctx.fillRect(10 + eyeOffset, 15, 3, 3);
+            ctx.fillRect(24 + eyeOffset, 15, 3, 3);
+
+            // Рот
+            if (player.shotgunAnim > 0.2) {
+                ctx.fillStyle = '#7f1d1d';
+                ctx.fillRect(12, 26, 12, 5); // Оскал при выстреле
+            } else {
+                ctx.fillStyle = '#000';
+                ctx.fillRect(12, 27, 12, 2); // Спокойная ухмылка
+            }
+        }
+
+        function updateDoomHUD() {
+            const ammoEl = document.getElementById('doom-ammo');
+            const healthEl = document.getElementById('doom-health');
+            const killsEl = document.getElementById('doom-kills');
+            if (ammoEl) ammoEl.innerText = player.ammo;
+            if (healthEl) healthEl.innerText = player.health + '%';
+            if (killsEl) killsEl.innerText = player.kills + '/6';
+        }
+
+        // Web Audio API Синтезатор звуков DOOM
+        function startDoomAudio() {
+            try {
+                if (!doomAudioCtx) {
+                    doomAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (doomMusicTimer) clearInterval(doomMusicTimer);
+                doomMusicStep = 0;
+                // E1M1 Мелодия (Басовый рифф)
+                const e1m1Notes = [82.4, 82.4, 164.8, 82.4, 82.4, 146.8, 82.4, 82.4, 130.8, 82.4, 82.4, 123.5, 130.8, 138.6];
+                doomMusicTimer = setInterval(() => {
+                    if (!doomMusicPlaying || !doomAudioCtx) return;
+                    const freq = e1m1Notes[doomMusicStep % e1m1Notes.length];
+                    playDoomBassNote(freq);
+                    doomMusicStep++;
+                }, 160);
+            } catch (e) {}
+        }
+
+        function toggleDoomMusic() {
+            doomMusicPlaying = !doomMusicPlaying;
+            const btn = document.getElementById('doom-music-btn');
+            if (btn) btn.innerText = doomMusicPlaying ? '🎵 Музыка: Вкл' : '🔇 Музыка: Выкл';
+        }
+
+        function playDoomBassNote(freq) {
+            try {
+                if (!doomAudioCtx) return;
+                const osc = doomAudioCtx.createOscillator();
+                const gain = doomAudioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(freq, doomAudioCtx.currentTime);
+                gain.gain.setValueAtTime(0.04, doomAudioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, doomAudioCtx.currentTime + 0.14);
+                osc.connect(gain);
+                gain.connect(doomAudioCtx.destination);
+                osc.start();
+                osc.stop(doomAudioCtx.currentTime + 0.15);
+            } catch (e) {}
+        }
+
+        function playDoomShotSound() {
+            try {
+                if (!doomAudioCtx) return;
+                // Шум выстрела дробовика
+                const bufSize = doomAudioCtx.sampleRate * 0.3;
+                const buf = doomAudioCtx.createBuffer(1, bufSize, doomAudioCtx.sampleRate);
+                const data = buf.getChannelData(0);
+                for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufSize * 0.25));
+                const noise = doomAudioCtx.createBufferSource();
+                noise.buffer = buf;
+                const filter = doomAudioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(800, doomAudioCtx.currentTime);
+                const gain = doomAudioCtx.createGain();
+                gain.gain.setValueAtTime(0.4, doomAudioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, doomAudioCtx.currentTime + 0.28);
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(doomAudioCtx.destination);
+                noise.start();
+            } catch (e) {}
+        }
+
+        function playDoomMonsterDeath() {
+            try {
+                if (!doomAudioCtx) return;
+                const osc = doomAudioCtx.createOscillator();
+                const gain = doomAudioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(140, doomAudioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(45, doomAudioCtx.currentTime + 0.35);
+                gain.gain.setValueAtTime(0.2, doomAudioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, doomAudioCtx.currentTime + 0.35);
+                osc.connect(gain);
+                gain.connect(doomAudioCtx.destination);
+                osc.start();
+                osc.stop(doomAudioCtx.currentTime + 0.36);
+            } catch (e) {}
+        }
+
+        // Клавиатура для DOOM
+        document.addEventListener('keydown', function(e) {
+            const modal = document.getElementById('doom-modal');
+            if (!modal || modal.style.display !== 'flex') return;
+
+            const k = e.key.toLowerCase();
+            if (k === 'w') doomKeys.w = true;
+            if (k === 's') doomKeys.s = true;
+            if (k === 'a') doomKeys.a = true;
+            if (k === 'd') doomKeys.d = true;
+            if (e.key === 'ArrowUp') doomKeys.w = true;
+            if (e.key === 'ArrowDown') doomKeys.s = true;
+            if (e.key === 'ArrowLeft') doomKeys.left = true;
+            if (e.key === 'ArrowRight') doomKeys.right = true;
+            if (e.key === ' ' || e.code === 'Space') {
+                e.preventDefault();
+                triggerDoomShotgun();
+            }
+            if (e.key === 'Escape') {
+                closeDoomModal();
+            }
+        });
+
+        document.addEventListener('keyup', function(e) {
+            const k = e.key.toLowerCase();
+            if (k === 'w') doomKeys.w = false;
+            if (k === 's') doomKeys.s = false;
+            if (k === 'a') doomKeys.a = false;
+            if (k === 'd') doomKeys.d = false;
+            if (e.key === 'ArrowUp') doomKeys.w = false;
+            if (e.key === 'ArrowDown') doomKeys.s = false;
+            if (e.key === 'ArrowLeft') doomKeys.left = false;
+            if (e.key === 'ArrowRight') doomKeys.right = false;
+        });
+
         function openSnakeModal() {
             const modal = document.getElementById('snake-modal');
             if (!modal) return;
@@ -1633,6 +2293,41 @@
 
     </script>
 
+    <!-- МОДАЛЬНОЕ ОКНО: ПАСХАЛКА DOOM 1993 -->
+    <div id="doom-modal" class="doom-modal-backdrop">
+        <div class="doom-modal-box">
+            <div class="doom-titlebar">
+                <h3><span>👹</span> DOOM 1993 (id Software) • Proxmox E1M1 Edition</h3>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button id="doom-music-btn" onclick="toggleDoomMusic()" style="background: #374151; border: 1px solid #4b5563; color: #fef08a; font-size: 11px; padding: 2px 8px; border-radius: 4px; cursor: pointer;">🎵 Музыка: Вкл</button>
+                    <button onclick="closeDoomModal()" style="background: none; border: none; color: #fca5a5; font-size: 18px; cursor: pointer; font-weight: bold;">✕</button>
+                </div>
+            </div>
+            <div class="doom-screen-wrap" onclick="triggerDoomShotgun()">
+                <canvas id="doom-canvas" width="320" height="200"></canvas>
+            </div>
+            <!-- Аутентичный статус-бар -->
+            <div class="doom-statusbar">
+                <div class="doom-hud-block">
+                    <div class="doom-hud-val" id="doom-ammo">48</div>
+                    <div class="doom-hud-lbl">ПАТРОНЫ</div>
+                </div>
+                <div class="doom-hud-block">
+                    <div class="doom-hud-val" id="doom-health">100%</div>
+                    <div class="doom-hud-lbl">ЗДОРОВЬЕ</div>
+                </div>
+                <div class="doom-face-wrap" id="doom-face-box">
+                    <canvas id="doom-face-canvas" width="36" height="36"></canvas>
+                </div>
+                <div class="doom-hud-block">
+                    <div class="doom-hud-val" id="doom-armor">100%</div>
+                    <div class="doom-hud-lbl">БРОНЯ</div>
+                </div>
+                <div class="doom-hud-block">
+                    <div class="doom-hud-val" id="doom-kills" style="color: #facc15;">0/6</div>
+                    <div class="doom-hud-lbl">ИМПЫ (КИМ)</div>
+                </div>
+            </div>
     <!-- МОДАЛЬНОЕ ОКНО: ПАСХАЛКА СИСАДМИНСКАЯ ЗМЕЙКА -->
     <div id="snake-modal" class="snake-modal-backdrop">
         <div class="snake-modal-box">
