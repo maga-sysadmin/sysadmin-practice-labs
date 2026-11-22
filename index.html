@@ -784,8 +784,8 @@
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.92);
-            backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.94);
+            backdrop-filter: blur(12px);
             z-index: 100000;
             align-items: center;
             justify-content: center;
@@ -794,8 +794,8 @@
             background: #09090b;
             border: 2px solid #ef4444;
             border-radius: 12px;
-            box-shadow: 0 0 50px rgba(239, 68, 68, 0.5), inset 0 0 30px rgba(0,0,0,0.9);
-            width: 740px;
+            box-shadow: 0 0 60px rgba(239, 68, 68, 0.6), inset 0 0 30px rgba(0,0,0,0.9);
+            width: 780px;
             max-width: 98%;
             display: flex;
             flex-direction: column;
@@ -857,7 +857,7 @@
             position: relative;
             background: #000;
             width: 100%;
-            height: 420px;
+            height: 460px;
             cursor: crosshair;
             display: flex;
             align-items: center;
@@ -865,30 +865,64 @@
             overflow: hidden;
         }
         #doom-canvas {
+            display: none;
             width: 100%;
             height: 100%;
-            display: block;
             image-rendering: pixelated;
         }
         #doom-dos-wrap {
-            display: none;
+            display: flex;
+            flex-direction: column;
             width: 100%;
             height: 100%;
             background: #000;
             position: relative;
         }
+        .doom-source-bar {
+            background: #141416;
+            padding: 4px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #27272a;
+            font-family: monospace;
+            font-size: 11px;
+            color: #94a3b8;
+        }
+        .doom-source-selector {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .doom-src-btn {
+            background: #27272a;
+            border: 1px solid #3f3f46;
+            color: #e2e8f0;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: monospace;
+        }
+        .doom-src-btn.active {
+            background: #dc2626;
+            border-color: #ef4444;
+            color: white;
+            font-weight: bold;
+        }
         #doom-dos-iframe {
+            flex: 1;
             width: 100%;
             height: 100%;
             border: none;
         }
         /* Статус-бар DOOM */
         .doom-statusbar {
+            display: none;
             background: #1c1917;
             border-top: 3px solid #44403c;
             border-bottom: 2px solid #0c0a09;
             padding: 6px 14px;
-            display: grid;
             grid-template-columns: 85px 100px 90px 100px 1fr;
             align-items: center;
             gap: 8px;
@@ -942,6 +976,7 @@
             gap: 6px;
         }
         .doom-btn-shoot {
+            display: none;
             background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
             color: white;
             border: 1px solid #f87171;
@@ -957,7 +992,6 @@
         .doom-btn-shoot:active {
             transform: scale(0.96);
         }
-
         /* Toast уведомление */
         #toast {
             position: fixed;
@@ -2320,28 +2354,36 @@ rtr2()  // Копирует расширенные ACL и списки дост�
                 <div class="doom-titlebar-left">
                     <h3><span>👹</span> DOOM 1993 (id Software)</h3>
                     <div class="doom-mode-tabs">
-                        <button id="doom-tab-native" class="doom-tab-btn active" onclick="switchDoomMode('native')">⚡ 3D Офлайн-движок</button>
-                        <button id="doom-tab-dos" class="doom-tab-btn" onclick="switchDoomMode('dos')">🎮 Оригинальный DOS DOOM</button>
+                        <button id="doom-tab-dos" class="doom-tab-btn active" onclick="switchDoomMode('dos')">🎮 Оригинальный DOOM (WASM)</button>
+                        <button id="doom-tab-native" class="doom-tab-btn" onclick="switchDoomMode('native')">⚡ 3D Офлайн-полигон</button>
                     </div>
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center;">
-                    <button id="doom-music-btn" onclick="toggleDoomMusic()" style="background: #27272a; border: 1px solid #3f3f46; color: #fef08a; font-size: 11px; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-family: monospace;">🎵 Музыка: Вкл</button>
+                    <button id="doom-music-btn" onclick="toggleDoomMusic()" style="display: none; background: #27272a; border: 1px solid #3f3f46; color: #fef08a; font-size: 11px; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-family: monospace;">🎵 Музыка: Вкл</button>
                     <button onclick="closeDoomModal()" style="background: none; border: none; color: #f87171; font-size: 20px; cursor: pointer; font-weight: bold; line-height: 1;">✕</button>
                 </div>
             </div>
             
             <!-- Экран игры -->
             <div class="doom-screen-wrap" id="doom-screen-container">
-                <!-- Режим 1: Автономный 3D Canvas Raycaster -->
-                <canvas id="doom-canvas" width="320" height="200" onclick="handleDoomCanvasClick(event)"></canvas>
-
-                <!-- Режим 2: DOS Zone WebAssembly Эмулятор -->
+                <!-- Режим 1 (По умолчанию): Настоящий DOOM WebAssembly / DOSBox -->
                 <div id="doom-dos-wrap">
+                    <div class="doom-source-bar">
+                        <span>Официальный порт id Software (1993) • Выберите игру в окне</span>
+                        <div class="doom-source-selector">
+                            <span style="font-size: 10px; color: #71717a;">Источник:</span>
+                            <button class="doom-src-btn active" id="doom-src-webdoom" onclick="changeDoomSource('webdoom')">WebDOOM (WASM)</button>
+                            <button class="doom-src-btn" id="doom-src-archive" onclick="changeDoomSource('archive')">DOSBox Archive</button>
+                        </div>
+                    </div>
                     <iframe id="doom-dos-iframe" allow="autoplay; fullscreen; gamepad" allowfullscreen></iframe>
                 </div>
+
+                <!-- Режим 2: Автономный 3D Canvas Raycaster (Офлайн) -->
+                <canvas id="doom-canvas" width="320" height="200" onclick="handleDoomCanvasClick(event)"></canvas>
             </div>
 
-            <!-- Аутентичный статус-бар DOOM -->
+            <!-- Аутентичный статус-бар DOOM (для офлайн режима) -->
             <div class="doom-statusbar" id="doom-native-hud">
                 <div class="doom-hud-block">
                     <div class="doom-hud-val" id="doom-ammo">40</div>
@@ -2363,6 +2405,14 @@ rtr2()  // Копирует расширенные ACL и списки дост�
                     <div class="doom-hud-lbl">ИМПЫ (КИМ)</div>
                 </div>
             </div>
+
+            <!-- Панель управления -->
+            <div class="doom-controls-bar">
+                <span id="doom-ctrl-hint">Управление: <strong>Стрелки / WASD</strong> (ходьба), <strong>Ctrl / Клик</strong> (огонь), <strong>Пробел</strong> (двери), <strong>1-7</strong> (оружие)</span>
+                <button class="doom-btn-shoot" id="doom-shoot-btn" onclick="triggerDoomShotgun()">💥 ВЫСТРЕЛ (ПРОБЕЛ)</button>
+            </div>
+        </div>
+    </div>
 
             <!-- Панель управления -->
             <div class="doom-controls-bar">
@@ -2944,7 +2994,8 @@ rtr2()  // Копирует расширенные ACL и списки дост�
         // =================================================================
         // DOOM 1993 MASTER EDITION (id Software) - DUAL MODE ENGINE
         // =================================================================
-        let doomMode = 'native'; // 'native' | 'dos'
+        let doomMode = 'dos'; // 'dos' (Real DOOM WASM) by default, or 'native' (Offline 3D)
+        let doomCurrentSource = 'webdoom';
         let doomCanvas = null;
         let doomCtx = null;
         let doomFaceCanvas = null;
@@ -2954,7 +3005,6 @@ rtr2()  // Копирует расширенные ACL и списки дост�
         let doomMusicPlaying = true;
         let doomMusicStep = 0;
         let doomMusicTimer = null;
-        let doomPointerLocked = false;
 
         // Предварительно сгенерированные 64x64 текстуры стен в RGBA
         const TEX_SIZE = 64;
@@ -2971,18 +3021,16 @@ rtr2()  // Копирует расширенные ACL и списки дост�
             const t0 = new Uint32Array(TEX_SIZE * TEX_SIZE);
             for (let y = 0; y < TEX_SIZE; y++) {
                 for (let x = 0; x < TEX_SIZE; x++) {
-                    let r = 82, g = 82, b = 91; // базовый цинковый
-                    // Полосы опасности (желто-черные) сверху и снизу
+                    let r = 75, g = 75, b = 85;
                     if (y < 6 || y > 57) {
                         const stripe = (x + y) % 12 < 6;
-                        if (stripe) { r = 234; g = 179; b = 8; } // желтый
-                        else { r = 24; g = 24; b = 27; } // черный
+                        if (stripe) { r = 234; g = 179; b = 8; }
+                        else { r = 24; g = 24; b = 27; }
                     } else if (y === 6 || y === 57 || x === 0 || x === 63 || y === 32) {
-                        r = 39; g = 39; b = 42; // темный шов
+                        r = 30; g = 30; b = 35;
                     } else if ((x === 4 || x === 59) && (y === 10 || y === 28 || y === 36 || y === 53)) {
-                        r = 212; g = 212; b = 216; // заклепка
+                        r = 210; g = 210; b = 220;
                     } else {
-                        // легкий шум металла
                         const n = ((x * 13 + y * 37) % 7) - 3;
                         r += n; g += n; b += n;
                     }
@@ -2991,22 +3039,23 @@ rtr2()  // Копирует расширенные ACL и списки дост�
             }
             doomTextures.push(t0);
 
-            // Текстура 1: E1M1 Токсичный красный кирпич
+            // Текстура 1: E1M1 Токсичный красный кирпич (мелкая реалистичная кладка)
             const t1 = new Uint32Array(TEX_SIZE * TEX_SIZE);
             for (let y = 0; y < TEX_SIZE; y++) {
-                const row = Math.floor(y / 8);
-                const isHorizMortar = (y % 8 === 0);
+                const brickH = 8;
+                const row = Math.floor(y / brickH);
+                const isHoriz = (y % brickH === 0);
                 const offset = (row % 2 === 0) ? 0 : 8;
                 for (let x = 0; x < TEX_SIZE; x++) {
-                    const isVertMortar = ((x + offset) % 16 === 0);
-                    let r = 127, g = 29, b = 29; // темно-красный
-                    if (isHorizMortar || isVertMortar) {
-                        r = 45; g = 10; b = 10; // темный раствор
+                    const isVert = ((x + offset) % 16 === 0);
+                    let r = 120, g = 28, b = 28;
+                    if (isHoriz || isVert) {
+                        r = 35; g = 12; b = 12; // темный шов раствора
                     } else {
-                        const n = ((x * 19 + y * 31) % 11) - 5;
-                        r = Math.min(255, Math.max(0, 140 + n * 3));
-                        g = Math.min(255, Math.max(0, 35 + n));
-                        b = Math.min(255, Math.max(0, 35 + n));
+                        const n = ((x * 19 + y * 31) % 9) - 4;
+                        r = Math.min(255, Math.max(0, 135 + n * 3));
+                        g = Math.min(255, Math.max(0, 32 + n));
+                        b = Math.min(255, Math.max(0, 32 + n));
                     }
                     t1[y * TEX_SIZE + x] = packPixel(r, g, b);
                 }
@@ -3017,22 +3066,18 @@ rtr2()  // Копирует расширенные ACL и списки дост�
             const t2 = new Uint32Array(TEX_SIZE * TEX_SIZE);
             for (let y = 0; y < TEX_SIZE; y++) {
                 for (let x = 0; x < TEX_SIZE; x++) {
-                    let r = 15, g = 23, b = 42; // темно-синий
-                    // Патч-корды слева и справа
+                    let r = 15, g = 23, b = 42;
                     if ((x >= 2 && x <= 6) || (x >= 57 && x <= 61)) {
-                        r = 37; g = 99; b = 235; // синий патч-корд
+                        r = 37; g = 99; b = 235;
                         if (x % 2 === 0) { r = 96; g = 165; b = 250; }
                     } else if (y % 6 === 0) {
-                        r = 30; g = 41; b = 59; // разделитель серверов
+                        r = 30; g = 41; b = 59;
                     } else if (x > 10 && x < 54 && (x % 6 === 0) && (y % 3 === 1)) {
-                        // Светодиоды серверов
                         const ledType = (x + y * 7) % 5;
-                        if (ledType === 0) { r = 34; g = 197; b = 94; } // зеленый
-                        else if (ledType === 1) { r = 239; g = 68; b = 68; } // красный
-                        else if (ledType === 2) { r = 234; g = 179; b = 8; } // янтарный
-                        else { r = 59; g = 130; b = 246; } // синий
-                    } else {
-                        r = 15; g = 23, b = 42;
+                        if (ledType === 0) { r = 34; g = 197; b = 94; }
+                        else if (ledType === 1) { r = 239; g = 68; b = 68; }
+                        else if (ledType === 2) { r = 234; g = 179; b = 8; }
+                        else { r = 59; g = 130; b = 246; }
                     }
                     t2[y * TEX_SIZE + x] = packPixel(r, g, b);
                 }
@@ -3044,19 +3089,15 @@ rtr2()  // Копирует расширенные ACL и списки дост�
             for (let y = 0; y < TEX_SIZE; y++) {
                 for (let x = 0; x < TEX_SIZE; x++) {
                     let r = 51, g = 65, b = 85;
-                    // Рамка двери
                     if (x < 5 || x > 58 || y < 5 || y > 58) {
                         const stripe = (x + y) % 10 < 5;
                         r = stripe ? 234 : 24;
                         g = stripe ? 179 : 24;
                         b = stripe ? 8 : 27;
                     } else if (x >= 24 && x <= 39 && y >= 24 && y <= 39) {
-                        // Знак радиации / опасности
                         const dx = x - 31.5;
                         const dy = y - 31.5;
-                        if (dx * dx + dy * dy < 45) {
-                            r = 239; g = 68; b = 68;
-                        }
+                        if (dx * dx + dy * dy < 45) { r = 239; g = 68; b = 68; }
                     } else {
                         if (x === 31 || y === 31) { r = 30; g = 41; b = 59; }
                     }
@@ -3065,7 +3106,7 @@ rtr2()  // Копирует расширенные ACL и списки дост�
             }
             doomTextures.push(t3);
 
-            // Текстура 4: Токсичная стена / Зеленая кислотная слизь
+            // Текстура 4: Токсичная кислотная стена
             const t4 = new Uint32Array(TEX_SIZE * TEX_SIZE);
             for (let y = 0; y < TEX_SIZE; y++) {
                 for (let x = 0; x < TEX_SIZE; x++) {
@@ -3073,9 +3114,7 @@ rtr2()  // Копирует расширенные ACL и списки дост�
                     let r = 22 + n * 2;
                     let g = 163 + n * 4;
                     let b = 74 + n * 2;
-                    if (y > 48) { // подтеки снизу
-                        g = Math.min(255, g + 30);
-                    }
+                    if (y > 48) g = Math.min(255, g + 30);
                     t4[y * TEX_SIZE + x] = packPixel(r, g, b);
                 }
             }
@@ -3090,7 +3129,7 @@ rtr2()  // Копирует расширенные ACL и списки дост�
             [1,0,2,0,0,0,0,0,0,0,3,0,0,0,0,1],
             [1,0,2,0,0,0,1,0,0,0,3,0,0,0,0,1],
             [1,0,0,0,0,0,1,1,0,1,1,0,0,0,0,1],
-            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1], // Коридор игрока (y = 6)
             [1,1,1,0,1,1,1,0,0,0,0,0,0,0,0,1],
             [1,0,0,0,0,0,1,0,4,4,4,0,0,0,0,1],
             [1,0,3,0,0,0,1,0,2,2,2,0,0,0,0,1],
@@ -3102,10 +3141,10 @@ rtr2()  // Копирует расширенные ACL и списки дост�
             [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
         ];
 
-        // Игрок (Doomguy)
+        // Игрок (Doomguy) - точка спавна в открытом коридоре (y = 6.5, x = 2.5) с обзором вдаль!
         let player = {
             x: 2.5,
-            y: 2.5,
+            y: 6.5,
             dirX: 1,
             dirY: 0,
             planeX: 0,
@@ -3115,75 +3154,87 @@ rtr2()  // Копирует расширенные ACL и списки дост�
             armor: 100,
             kills: 0,
             totalKills: 6,
-            shotgunAnim: 0, // 0 = idle, > 0 = firing/reload phase
+            shotgunAnim: 0,
             bobTime: 0,
-            damageFlash: 0, // таймер вспышки урона
+            damageFlash: 0,
             isDead: false,
             faceEyeTimer: 0,
-            faceEyeDir: 0 // -1 = влево, 0 = прямо, 1 = вправо
+            faceEyeDir: 0
         };
 
-        // Враги, бочки и предметы
         let doomSprites = [];
 
         function resetDoomSprites() {
             doomSprites = [
-                // Монстры (Импы)
-                { x: 5.5, y: 3.5, type: 'imp', hp: 60, maxHp: 60, dead: false, state: 'idle', attackTimer: 0, frame: 0 },
-                { x: 12.5, y: 3.5, type: 'imp', hp: 60, maxHp: 60, dead: false, state: 'idle', attackTimer: 0, frame: 0 },
-                { x: 8.5, y: 6.5, type: 'imp', hp: 60, maxHp: 60, dead: false, state: 'idle', attackTimer: 0, frame: 0 },
-                { x: 4.5, y: 10.5, type: 'imp', hp: 60, maxHp: 60, dead: false, state: 'idle', attackTimer: 0, frame: 0 },
-                { x: 11.5, y: 10.5, type: 'imp', hp: 60, maxHp: 60, dead: false, state: 'idle', attackTimer: 0, frame: 0 },
-                { x: 13.5, y: 13.5, type: 'imp', hp: 60, maxHp: 60, dead: false, state: 'idle', attackTimer: 0, frame: 0 },
+                // Монстры стоят прямо по коридору и в соседних комнатах!
+                { x: 8.5, y: 6.5, type: 'imp', hp: 60, maxHp: 60, dead: false, state: 'idle', attackTimer: 0 },
+                { x: 12.5, y: 6.5, type: 'imp', hp: 60, maxHp: 60, dead: false, state: 'idle', attackTimer: 0 },
+                { x: 5.5, y: 3.5, type: 'imp', hp: 60, maxHp: 60, dead: false, state: 'idle', attackTimer: 0 },
+                { x: 12.5, y: 3.5, type: 'imp', hp: 60, maxHp: 60, dead: false, state: 'idle', attackTimer: 0 },
+                { x: 4.5, y: 10.5, type: 'imp', hp: 60, maxHp: 60, dead: false, state: 'idle', attackTimer: 0 },
+                { x: 13.5, y: 13.5, type: 'imp', hp: 60, maxHp: 60, dead: false, state: 'idle', attackTimer: 0 },
 
-                // Бочки с токсичной слизью (взрываются при попадании!)
-                { x: 7.5, y: 2.5, type: 'barrel', hp: 20, dead: false },
-                { x: 9.5, y: 10.5, type: 'barrel', hp: 20, dead: false },
-                { x: 13.5, y: 11.5, type: 'barrel', hp: 20, dead: false },
+                // Бочки
+                { x: 6.5, y: 7.5, type: 'barrel', hp: 20, dead: false },
+                { x: 10.5, y: 5.5, type: 'barrel', hp: 20, dead: false },
 
-                // Предметы (подбираются при приближении)
-                { x: 3.5, y: 4.5, type: 'medkit', collected: false },
-                { x: 10.5, y: 3.5, type: 'medkit', collected: false },
-                { x: 4.5, y: 13.5, type: 'armor', collected: false },
-                { x: 12.5, y: 6.5, type: 'armor', collected: false },
-                { x: 7.5, y: 5.5, type: 'ammo', collected: false },
-                { x: 13.5, y: 9.5, type: 'ammo', collected: false }
+                // Предметы на виду
+                { x: 4.5, y: 6.5, type: 'medkit', collected: false },
+                { x: 5.5, y: 6.5, type: 'ammo', collected: false },
+                { x: 11.5, y: 6.5, type: 'armor', collected: false }
             ];
         }
 
-        // Летящие фаерболы
         let doomProjectiles = [];
-
         let doomKeys = { w: false, s: false, a: false, d: false, left: false, right: false, q: false, e: false };
 
-        // Переключение режимов: Офлайн-движок / Полный DOS
+        // Переключение источника эмуляции DOS
+        function changeDoomSource(src) {
+            doomCurrentSource = src;
+            const btnWeb = document.getElementById('doom-src-webdoom');
+            const btnArc = document.getElementById('doom-src-archive');
+            const iframe = document.getElementById('doom-dos-iframe');
+            if (!iframe) return;
+
+            if (src === 'webdoom') {
+                if (btnWeb) btnWeb.classList.add('active');
+                if (btnArc) btnArc.classList.remove('active');
+                iframe.src = 'https://ustymukhman.github.io/WebDOOM/public/';
+            } else {
+                if (btnArc) btnArc.classList.add('active');
+                if (btnWeb) btnWeb.classList.remove('active');
+                iframe.src = 'https://archive.org/embed/doom_20220207';
+            }
+        }
+
+        // Переключение режимов: Оригинальный DOOM / 3D Офлайн-полигон
         function switchDoomMode(mode) {
             doomMode = mode;
-            const tabNative = document.getElementById('doom-tab-native');
             const tabDos = document.getElementById('doom-tab-dos');
+            const tabNative = document.getElementById('doom-tab-native');
             const canvas = document.getElementById('doom-canvas');
             const dosWrap = document.getElementById('doom-dos-wrap');
             const iframe = document.getElementById('doom-dos-iframe');
             const hud = document.getElementById('doom-native-hud');
             const shootBtn = document.getElementById('doom-shoot-btn');
+            const musicBtn = document.getElementById('doom-music-btn');
             const ctrlHint = document.getElementById('doom-ctrl-hint');
 
             if (mode === 'dos') {
-                if (tabNative) tabNative.classList.remove('active');
                 if (tabDos) tabDos.classList.add('active');
+                if (tabNative) tabNative.classList.remove('active');
+                if (dosWrap) dosWrap.style.display = 'flex';
                 if (canvas) canvas.style.display = 'none';
                 if (hud) hud.style.display = 'none';
                 if (shootBtn) shootBtn.style.display = 'none';
-                if (dosWrap) dosWrap.style.display = 'block';
+                if (musicBtn) musicBtn.style.display = 'none';
 
-                if (ctrlHint) ctrlHint.innerHTML = 'DOS DOOM: <strong>Стрелки</strong> (ходьба), <strong>Ctrl</strong> (выстрел), <strong>Alt</strong> (стрейф), <strong>Пробел</strong> (двери), <strong>1-7</strong> (оружие)';
+                if (ctrlHint) ctrlHint.innerHTML = 'Оригинальный DOOM: <strong>Стрелки / WASD</strong> (ходьба), <strong>Ctrl / Клик</strong> (огонь), <strong>Пробел</strong> (двери), <strong>1-7</strong> (оружие)';
 
-                // Инициализируем DOS Zone iframe только при переходе
                 if (iframe && (!iframe.src || iframe.src === '' || iframe.src === 'about:blank')) {
-                    iframe.src = 'https://dos.zone/player/?bundleUrl=https%3A%2F%2Fcdn.dos.zone%2Foriginal%2F2X%2F2%2F24b00b14f118580763440ecaddcc948f8cb94f14.jsdos&anonymous=1';
+                    changeDoomSource(doomCurrentSource);
                 }
 
-                // Останавливаем музыку и цикл нативного движка
                 if (doomLoopTimer) { cancelAnimationFrame(doomLoopTimer); doomLoopTimer = null; }
                 if (doomMusicTimer) { clearInterval(doomMusicTimer); doomMusicTimer = null; }
             } else {
@@ -3192,14 +3243,12 @@ rtr2()  // Копирует расширенные ACL и списки дост�
                 if (canvas) canvas.style.display = 'block';
                 if (hud) hud.style.display = 'grid';
                 if (shootBtn) shootBtn.style.display = 'block';
+                if (musicBtn) musicBtn.style.display = 'block';
                 if (dosWrap) dosWrap.style.display = 'none';
 
-                if (ctrlHint) ctrlHint.innerHTML = 'Управление: <strong>W/S</strong> (шаг), <strong>A/D</strong> (поворот/стрейф) • <strong>Пробел / Клик</strong>: Дробовик • <strong>M</strong>: Звук';
+                if (ctrlHint) ctrlHint.innerHTML = 'Офлайн-полигон: <strong>W/S</strong> (шаг), <strong>A/D</strong> (поворот) • <strong>Пробел / Клик</strong>: Дробовик • <strong>M</strong>: Звук';
 
-                // Возобновляем нативный игровой цикл
-                lastFrameTime = performance.now();
-                if (!doomLoopTimer) requestAnimationFrame(doomGameLoop);
-                startDoomAudio();
+                initDoomGame();
             }
         }
 
@@ -3208,11 +3257,7 @@ rtr2()  // Копирует расширенные ACL и списки дост�
             if (!modal) return;
             modal.style.display = 'flex';
             initDoomTextures();
-            if (doomMode === 'native') {
-                initDoomGame();
-            } else {
-                switchDoomMode('dos');
-            }
+            switchDoomMode(doomMode);
         }
 
         function closeDoomModal() {
@@ -3222,7 +3267,6 @@ rtr2()  // Копирует расширенные ACL и списки дост�
             if (doomMusicTimer) clearInterval(doomMusicTimer);
             doomLoopTimer = null;
             doomMusicTimer = null;
-            if (document.exitPointerLock) document.exitPointerLock();
         }
 
         function handleDoomCanvasClick(e) {
@@ -3241,8 +3285,9 @@ rtr2()  // Копирует расширенные ACL и списки дост�
             doomFaceCanvas = document.getElementById('doom-face-canvas');
             if (doomFaceCanvas) doomFaceCtx = doomFaceCanvas.getContext('2d');
 
+            // Спавн с открытым обзором вдоль коридора!
             player.x = 2.5;
-            player.y = 2.5;
+            player.y = 6.5;
             player.dirX = 1;
             player.dirY = 0;
             player.planeX = 0;
@@ -3288,8 +3333,8 @@ rtr2()  // Копирует расширенные ACL и списки дост�
         function updateDoomPhysics(dt) {
             if (player.isDead) return;
 
-            const moveSpeed = 3.4 * dt;
-            const rotSpeed = 2.5 * dt;
+            const moveSpeed = 3.6 * dt;
+            const rotSpeed = 2.6 * dt;
 
             // Поворот
             if (doomKeys.a || doomKeys.left || doomKeys.q) {
@@ -3328,19 +3373,16 @@ rtr2()  // Копирует расширенные ACL и списки дост�
 
             if (moved) player.bobTime += dt * 10;
 
-            // Анимация дробовика
             if (player.shotgunAnim > 0) {
                 player.shotgunAnim -= dt * 3.5;
                 if (player.shotgunAnim < 0) player.shotgunAnim = 0;
             }
 
-            // Вспышка урона
             if (player.damageFlash > 0) {
                 player.damageFlash -= dt * 2.5;
                 if (player.damageFlash < 0) player.damageFlash = 0;
             }
 
-            // Глаза Думгая
             player.faceEyeTimer += dt;
             if (player.faceEyeTimer > 1.8) {
                 player.faceEyeTimer = 0;
@@ -3348,18 +3390,15 @@ rtr2()  // Копирует расширенные ACL и списки дост�
                 player.faceEyeDir = r < 0.33 ? -1 : (r < 0.66 ? 1 : 0);
             }
 
-            // Обновление монстров (AI)
+            // AI Монстров
             doomSprites.forEach(sprite => {
                 if (sprite.type !== 'imp' || sprite.dead) return;
-
                 const dx = player.x - sprite.x;
                 const dy = player.y - sprite.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
 
-                // Если игрок в пределах видимости (< 9 клеток)
                 if (dist < 9.0) {
                     sprite.state = 'hunt';
-                    // Движение к игроку
                     if (dist > 3.0) {
                         const stepX = (dx / dist) * 1.3 * dt;
                         const stepY = (dy / dist) * 1.3 * dt;
@@ -3367,12 +3406,10 @@ rtr2()  // Копирует расширенные ACL и списки дост�
                         if (DOOM_MAP[Math.floor(sprite.y + stepY)][Math.floor(sprite.x)] === 0) sprite.y += stepY;
                     }
 
-                    // Атака фаерболом
                     sprite.attackTimer += dt;
                     if (sprite.attackTimer > 2.2 && dist < 7.0) {
                         sprite.attackTimer = 0;
                         playDoomMonsterRoar();
-                        // Запуск огненного шара
                         doomProjectiles.push({
                             x: sprite.x,
                             y: sprite.y,
@@ -3384,21 +3421,18 @@ rtr2()  // Копирует расширенные ACL и списки дост�
                 }
             });
 
-            // Обновление фаерболов
+            // Фаерболы
             for (let i = doomProjectiles.length - 1; i >= 0; i--) {
                 const p = doomProjectiles[i];
                 if (!p.active) continue;
-
                 p.x += p.dirX * 4.8 * dt;
                 p.y += p.dirY * 4.8 * dt;
 
-                // Попадание в стену
                 if (DOOM_MAP[Math.floor(p.y)] && DOOM_MAP[Math.floor(p.y)][Math.floor(p.x)] > 0) {
                     p.active = false;
                     continue;
                 }
 
-                // Попадание в игрока
                 const pdx = p.x - player.x;
                 const pdy = p.y - player.y;
                 if (Math.sqrt(pdx * pdx + pdy * pdy) < 0.45) {
@@ -3431,7 +3465,6 @@ rtr2()  // Копирует расширенные ACL и списки дост�
 
         function applyPlayerDamage(amount) {
             if (player.isDead) return;
-
             let dmg = amount;
             if (player.armor > 0) {
                 const armorAbsorb = Math.min(player.armor, Math.floor(dmg * 0.5));
@@ -3450,7 +3483,7 @@ rtr2()  // Копирует расширенные ACL и списки дост�
             updateDoomHUD();
         }
 
-        // Рендерер 3D-мира на Canvas (320x200) с текстурами и DDA
+        // Рендерер 3D-мира на Canvas (320x200)
         function renderDoomRaycaster() {
             if (!doomCtx) return;
             const w = doomCanvas.width;
@@ -3459,7 +3492,7 @@ rtr2()  // Копирует расширенные ACL и списки дост�
             const imgData = doomCtx.createImageData(w, h);
             const buf = new Uint32Array(imgData.data.buffer);
 
-            // Потолок и Пол с плавным затемнением глубины
+            // Потолок и Пол
             for (let y = 0; y < h / 2; y++) {
                 const shade = 18 + Math.floor(y * 0.15);
                 const ceilColor = packPixel(shade, shade, shade + 4);
@@ -3473,7 +3506,7 @@ rtr2()  // Копирует расширенные ACL и списки дост�
 
             const zBuffer = new Float32Array(w);
 
-            // DDA Рейкастинг стен
+            // DDA
             for (let x = 0; x < w; x++) {
                 const cameraX = 2 * x / w - 1;
                 const rayDirX = player.dirX + player.planeX * cameraX;
@@ -3529,7 +3562,6 @@ rtr2()  // Копирует расширенные ACL и списки дост�
                 const wallIdx = (DOOM_MAP[mapY][mapX] - 1) % doomTextures.length;
                 const tex = doomTextures[wallIdx];
 
-                // Расчет координаты текстуры X
                 let wallX;
                 if (side === 0) wallX = player.y + perpWallDist * rayDirY;
                 else wallX = player.x + perpWallDist * rayDirX;
@@ -3539,9 +3571,8 @@ rtr2()  // Копирует расширенные ACL и списки дост�
                 if (side === 0 && rayDirX > 0) texX = TEX_SIZE - texX - 1;
                 if (side === 1 && rayDirY < 0) texX = TEX_SIZE - texX - 1;
 
-                // Фактор затенения по дистанции и стороне стены
                 let shade = Math.min(1.0, 2.2 / (perpWallDist + 0.001));
-                if (side === 1) shade *= 0.72; // боковая грань темнее
+                if (side === 1) shade *= 0.72;
 
                 const step = TEX_SIZE / lineHeight;
                 let texPos = (drawStart - h / 2 + lineHeight / 2) * step;
@@ -3551,7 +3582,6 @@ rtr2()  // Копирует расширенные ACL и списки дост�
                     texPos += step;
                     const rawPix = tex[texY * TEX_SIZE + texX];
 
-                    // Применение затенения к RGB
                     const r = Math.floor((rawPix & 0xFF) * shade);
                     const g = Math.floor(((rawPix >> 8) & 0xFF) * shade);
                     const b = Math.floor(((rawPix >> 16) & 0xFF) * shade);
@@ -3562,22 +3592,15 @@ rtr2()  // Копирует расширенные ACL и списки дост�
 
             doomCtx.putImageData(imgData, 0, 0);
 
-            // Отрисовка спрайтов (Монстры, бочки, аптечки)
             renderDoomSprites(w, h, zBuffer);
-
-            // Отрисовка летящих фаерболов
             renderDoomProjectiles(w, h, zBuffer);
-
-            // Отрисовка оружия (Двуствольный Дробовик)
             drawSuperShotgun(w, h);
 
-            // Вспышка урона (красный экран)
             if (player.damageFlash > 0) {
                 doomCtx.fillStyle = `rgba(220, 38, 38, ${player.damageFlash * 0.55})`;
                 doomCtx.fillRect(0, 0, w, h);
             }
 
-            // Экран Game Over
             if (player.isDead) {
                 doomCtx.fillStyle = 'rgba(0, 0, 0, 0.75)';
                 doomCtx.fillRect(0, 0, w, h);
@@ -3589,7 +3612,6 @@ rtr2()  // Копирует расширенные ACL и списки дост�
                 doomCtx.font = '11px monospace';
                 doomCtx.fillText('Нажмите [ПРОБЕЛ] или кликните для возрождения', w / 2, h / 2 + 18);
             } else if (player.kills >= player.totalKills) {
-                // Экран победы (все импы зачищены)
                 doomCtx.fillStyle = 'rgba(0, 0, 0, 0.6)';
                 doomCtx.fillRect(0, h / 2 - 30, w, 60);
                 doomCtx.fillStyle = '#facc15';
@@ -3602,7 +3624,6 @@ rtr2()  // Копирует расширенные ACL и списки дост�
             }
         }
 
-        // Отрисовка спрайтов с сортировкой по глубине
         function renderDoomSprites(w, h, zBuffer) {
             const sorted = doomSprites
                 .map(s => {
@@ -3634,7 +3655,6 @@ rtr2()  // Копирует расширенные ACL и списки дост�
 
                 if (drawStartX >= w || drawEndX < 0) return;
 
-                // Проверяем видимость хотя бы одного пикселя по zBuffer
                 let isVisible = false;
                 for (let x = drawStartX; x < drawEndX; x++) {
                     if (transformY < zBuffer[x]) { isVisible = true; break; }
@@ -3644,43 +3664,37 @@ rtr2()  // Копирует расширенные ACL и списки дост�
                 const shade = Math.min(1.0, 2.0 / transformY);
 
                 if (sprite.type === 'imp') {
-                    drawImpSprite(drawStartX, drawStartY, drawEndX - drawStartX, drawEndY - drawStartY, sprite, shade, transformY, zBuffer, w);
+                    drawImpSprite(drawStartX, drawStartY, drawEndX - drawStartX, drawEndY - drawStartY, sprite, shade);
                 } else if (sprite.type === 'barrel') {
-                    drawBarrelSprite(drawStartX, drawStartY, drawEndX - drawStartX, drawEndY - drawStartY, sprite, shade, transformY, zBuffer, w);
+                    drawBarrelSprite(drawStartX, drawStartY, drawEndX - drawStartX, drawEndY - drawStartY, sprite, shade);
                 } else if (sprite.type === 'medkit' || sprite.type === 'armor' || sprite.type === 'ammo') {
-                    drawItemSprite(drawStartX, drawStartY, drawEndX - drawStartX, drawEndY - drawStartY, sprite, shade, transformY, zBuffer, w);
+                    drawItemSprite(drawStartX, drawStartY, drawEndX - drawStartX, drawEndY - drawStartY, sprite, shade);
                 }
             });
         }
 
-        function drawImpSprite(sx, sy, sw, sh, imp, shade, dist, zBuffer, w) {
+        function drawImpSprite(sx, sy, sw, sh, imp, shade) {
             doomCtx.save();
             if (imp.dead) {
-                // Лужа крови мертвого импа
                 doomCtx.fillStyle = '#7f1d1d';
                 doomCtx.fillRect(sx, sy + sh * 0.8, sw, sh * 0.2);
                 doomCtx.fillStyle = '#450a0a';
                 doomCtx.fillRect(sx + sw * 0.2, sy + sh * 0.85, sw * 0.6, sh * 0.1);
             } else {
-                // Тело импа (коричнево-мускулистое)
                 doomCtx.fillStyle = `rgb(${Math.floor(180 * shade)}, ${Math.floor(83 * shade)}, ${Math.floor(9 * shade)})`;
                 doomCtx.fillRect(sx + sw * 0.25, sy + sh * 0.2, sw * 0.5, sh * 0.65);
 
-                // Голова с рогами
                 doomCtx.fillStyle = `rgb(${Math.floor(120 * shade)}, ${Math.floor(53 * shade)}, ${Math.floor(15 * shade)})`;
                 doomCtx.fillRect(sx + sw * 0.32, sy + sh * 0.05, sw * 0.36, sh * 0.22);
 
-                // Горящие красные глаза
                 doomCtx.fillStyle = '#ef4444';
                 doomCtx.fillRect(sx + sw * 0.38, sy + sh * 0.12, sw * 0.08, sh * 0.05);
                 doomCtx.fillRect(sx + sw * 0.54, sy + sh * 0.12, sw * 0.08, sh * 0.05);
 
-                // Когтистые руки
                 doomCtx.fillStyle = `rgb(${Math.floor(217 * shade)}, ${Math.floor(119 * shade)}, ${Math.floor(6 * shade)})`;
                 doomCtx.fillRect(sx + sw * 0.1, sy + sh * 0.3, sw * 0.15, sh * 0.4);
                 doomCtx.fillRect(sx + sw * 0.75, sy + sh * 0.3, sw * 0.15, sh * 0.4);
 
-                // Полоска здоровья над импом
                 const hpRatio = imp.hp / imp.maxHp;
                 doomCtx.fillStyle = '#450a0a';
                 doomCtx.fillRect(sx, sy - 8, sw, 4);
@@ -3690,30 +3704,26 @@ rtr2()  // Копирует расширенные ACL и списки дост�
             doomCtx.restore();
         }
 
-        function drawBarrelSprite(sx, sy, sw, sh, barrel, shade, dist, zBuffer, w) {
+        function drawBarrelSprite(sx, sy, sw, sh, barrel, shade) {
             doomCtx.save();
             if (barrel.dead) {
-                // Взорванная бочка
                 doomCtx.fillStyle = '#15803d';
                 doomCtx.fillRect(sx, sy + sh * 0.75, sw, sh * 0.25);
             } else {
-                // Зеленая токсичная бочка
                 doomCtx.fillStyle = `rgb(${Math.floor(22 * shade)}, ${Math.floor(163 * shade)}, ${Math.floor(74 * shade)})`;
                 doomCtx.fillRect(sx + sw * 0.2, sy + sh * 0.25, sw * 0.6, sh * 0.7);
 
-                // Металлические кольца
                 doomCtx.fillStyle = '#1e293b';
                 doomCtx.fillRect(sx + sw * 0.2, sy + sh * 0.35, sw * 0.6, sh * 0.08);
                 doomCtx.fillRect(sx + sw * 0.2, sy + sh * 0.75, sw * 0.6, sh * 0.08);
 
-                // Желтый знак радиоактивности
                 doomCtx.fillStyle = '#facc15';
                 doomCtx.fillRect(sx + sw * 0.4, sy + sh * 0.5, sw * 0.2, sh * 0.15);
             }
             doomCtx.restore();
         }
 
-        function drawItemSprite(sx, sy, sw, sh, item, shade, dist, zBuffer, w) {
+        function drawItemSprite(sx, sy, sw, sh, item, shade) {
             doomCtx.save();
             const iy = sy + sh * 0.6;
             const iw = sw * 0.5;
@@ -3721,20 +3731,17 @@ rtr2()  // Копирует расширенные ACL и списки дост�
             const ix = sx + sw * 0.25;
 
             if (item.type === 'medkit') {
-                // Белая аптечка с красным крестом
                 doomCtx.fillStyle = '#f8fafc';
                 doomCtx.fillRect(ix, iy, iw, ih);
                 doomCtx.fillStyle = '#ef4444';
                 doomCtx.fillRect(ix + iw * 0.4, iy + ih * 0.2, iw * 0.2, ih * 0.6);
                 doomCtx.fillRect(ix + iw * 0.2, iy + ih * 0.4, iw * 0.6, ih * 0.2);
             } else if (item.type === 'armor') {
-                // Зеленый бронежилет
                 doomCtx.fillStyle = '#15803d';
                 doomCtx.fillRect(ix, iy, iw, ih);
                 doomCtx.fillStyle = '#22c55e';
                 doomCtx.fillRect(ix + iw * 0.25, iy + ih * 0.2, iw * 0.5, ih * 0.4);
             } else if (item.type === 'ammo') {
-                // Красная коробка патронов
                 doomCtx.fillStyle = '#991b1b';
                 doomCtx.fillRect(ix, iy, iw, ih);
                 doomCtx.fillStyle = '#facc15';
@@ -3743,7 +3750,6 @@ rtr2()  // Копирует расширенные ACL и списки дост�
             doomCtx.restore();
         }
 
-        // Отрисовка летящих огненных шаров
         function renderDoomProjectiles(w, h, zBuffer) {
             doomProjectiles.forEach(p => {
                 if (!p.active) return;
@@ -3761,13 +3767,11 @@ rtr2()  // Копирует расширенные ACL и списки дост�
 
                 if (screenX >= 0 && screenX < w && transformY < zBuffer[screenX]) {
                     doomCtx.save();
-                    // Огненное ядро
                     doomCtx.fillStyle = '#fef08a';
                     doomCtx.beginPath();
                     doomCtx.arc(screenX, h / 2, Math.max(2, size), 0, Math.PI * 2);
                     doomCtx.fill();
 
-                    // Огненный ореол
                     doomCtx.fillStyle = 'rgba(234, 88, 12, 0.6)';
                     doomCtx.beginPath();
                     doomCtx.arc(screenX, h / 2, Math.max(4, size * 1.8), 0, Math.PI * 2);
@@ -3777,96 +3781,99 @@ rtr2()  // Копирует расширенные ACL и списки дост�
             });
         }
 
-        // Отрисовка супер-дробовика (SSG)
+        // Полноразмерный реалистичный Super Shotgun (ширина ~105px, высота ~90px)
         function drawSuperShotgun(w, h) {
             doomCtx.save();
             const anim = player.shotgunAnim;
             const bobY = Math.sin(player.bobTime) * 3;
             const bobX = Math.cos(player.bobTime * 0.5) * 2;
 
-            const gunY = h - 68 + anim * 32 + bobY;
+            const gunY = h - 85 + anim * 35 + bobY;
             const gunX = w / 2 + bobX;
 
-            // Вспышка выстрела (первые миллисекунды)
+            // Вспышка дуплета
             if (anim > 0.65) {
-                // Огненные лучи вспышки
                 doomCtx.fillStyle = '#fef08a';
                 doomCtx.beginPath();
-                doomCtx.arc(gunX, gunY - 22, 28, 0, Math.PI * 2);
+                doomCtx.arc(gunX, gunY - 26, 36, 0, Math.PI * 2);
                 doomCtx.fill();
 
                 doomCtx.fillStyle = '#ea580c';
                 doomCtx.beginPath();
-                doomCtx.arc(gunX, gunY - 22, 16, 0, Math.PI * 2);
+                doomCtx.arc(gunX, gunY - 26, 22, 0, Math.PI * 2);
                 doomCtx.fill();
 
-                // Дым выстрела
-                doomCtx.fillStyle = 'rgba(212, 212, 216, 0.5)';
+                doomCtx.fillStyle = 'rgba(212, 212, 216, 0.6)';
                 doomCtx.beginPath();
-                doomCtx.arc(gunX - 15, gunY - 35, 12, 0, Math.PI * 2);
-                doomCtx.arc(gunX + 15, gunY - 35, 12, 0, Math.PI * 2);
+                doomCtx.arc(gunX - 22, gunY - 45, 16, 0, Math.PI * 2);
+                doomCtx.arc(gunX + 22, gunY - 45, 16, 0, Math.PI * 2);
                 doomCtx.fill();
             }
 
-            // Вылетающие гильзы в фазе перезарядки
+            // Выброс гильз
             if (anim > 0.25 && anim < 0.65) {
-                doomCtx.fillStyle = '#ef4444'; // красная гильза
-                doomCtx.fillRect(gunX - 25 - (0.65 - anim) * 30, gunY - 10 + (0.65 - anim) * 40, 8, 14);
-                doomCtx.fillRect(gunX + 18 + (0.65 - anim) * 30, gunY - 10 + (0.65 - anim) * 40, 8, 14);
-                doomCtx.fillStyle = '#facc15'; // латунный донце
-                doomCtx.fillRect(gunX - 25 - (0.65 - anim) * 30, gunY - 10 + (0.65 - anim) * 40, 8, 3);
-                doomCtx.fillRect(gunX + 18 + (0.65 - anim) * 30, gunY - 10 + (0.65 - anim) * 40, 8, 3);
+                doomCtx.fillStyle = '#ef4444';
+                doomCtx.fillRect(gunX - 35 - (0.65 - anim) * 40, gunY - 10 + (0.65 - anim) * 50, 10, 18);
+                doomCtx.fillRect(gunX + 25 + (0.65 - anim) * 40, gunY - 10 + (0.65 - anim) * 50, 10, 18);
+                doomCtx.fillStyle = '#facc15';
+                doomCtx.fillRect(gunX - 35 - (0.65 - anim) * 40, gunY - 10 + (0.65 - anim) * 50, 10, 4);
+                doomCtx.fillRect(gunX + 25 + (0.65 - anim) * 40, gunY - 10 + (0.65 - anim) * 50, 10, 4);
             }
 
-            // Стальные стволы дробовика (два ствола)
-            doomCtx.fillStyle = '#09090b'; // глубокая тень между стволами
-            doomCtx.fillRect(gunX - 13, gunY - 8, 26, 68);
-
+            // Массивные стальные стволы
             // Левый ствол
-            doomCtx.fillStyle = '#27272a';
-            doomCtx.fillRect(gunX - 13, gunY - 10, 11, 68);
-            doomCtx.fillStyle = '#52525b'; // блик стали
-            doomCtx.fillRect(gunX - 11, gunY - 10, 4, 66);
+            doomCtx.fillStyle = '#18181b';
+            doomCtx.fillRect(gunX - 22, gunY - 12, 20, 85);
+            doomCtx.fillStyle = '#3f3f46';
+            doomCtx.fillRect(gunX - 20, gunY - 14, 16, 85);
+            doomCtx.fillStyle = '#71717a';
+            doomCtx.fillRect(gunX - 17, gunY - 14, 6, 85);
 
             // Правый ствол
-            doomCtx.fillStyle = '#27272a';
-            doomCtx.fillRect(gunX + 2, gunY - 10, 11, 68);
-            doomCtx.fillStyle = '#52525b';
-            doomCtx.fillRect(gunX + 4, gunY - 10, 4, 66);
+            doomCtx.fillStyle = '#18181b';
+            doomCtx.fillRect(gunX + 2, gunY - 12, 20, 85);
+            doomCtx.fillStyle = '#3f3f46';
+            doomCtx.fillRect(gunX + 4, gunY - 14, 16, 85);
+            doomCtx.fillStyle = '#71717a';
+            doomCtx.fillRect(gunX + 7, gunY - 14, 6, 85);
 
-            // Дульный срез (два черных отверстия)
+            // Дульные отверстия
             doomCtx.fillStyle = '#000';
             doomCtx.beginPath();
-            doomCtx.arc(gunX - 7, gunY - 10, 4, 0, Math.PI * 2);
-            doomCtx.arc(gunX + 7, gunY - 10, 4, 0, Math.PI * 2);
+            doomCtx.arc(gunX - 12, gunY - 14, 7, 0, Math.PI * 2);
+            doomCtx.arc(gunX + 12, gunY - 14, 7, 0, Math.PI * 2);
             doomCtx.fill();
 
-            // Деревянное цевье из ореха
-            doomCtx.fillStyle = '#78350f';
-            doomCtx.fillRect(gunX - 16, gunY + 24, 32, 28);
-            doomCtx.fillStyle = '#92400e';
-            doomCtx.fillRect(gunX - 14, gunY + 28, 28, 4);
+            // Вентилируемая планка между стволами
+            doomCtx.fillStyle = '#27272a';
+            doomCtx.fillRect(gunX - 3, gunY - 12, 6, 80);
 
-            // Рука в перчатке без пальцев
-            doomCtx.fillStyle = '#18181b';
-            doomCtx.fillRect(gunX - 18, gunY + 48, 36, 25);
-            doomCtx.fillStyle = '#f59e0b'; // кожа пальцев
-            doomCtx.fillRect(gunX - 14, gunY + 46, 28, 6);
+            // Ореховое цевье
+            doomCtx.fillStyle = '#78350f';
+            doomCtx.fillRect(gunX - 26, gunY + 28, 52, 38);
+            doomCtx.fillStyle = '#92400e';
+            doomCtx.fillRect(gunX - 23, gunY + 34, 46, 6);
+            doomCtx.fillStyle = '#451a03';
+            doomCtx.fillRect(gunX - 23, gunY + 44, 46, 4);
+
+            // Руки Думгая в тактических перчатках
+            doomCtx.fillStyle = '#09090b';
+            doomCtx.fillRect(gunX - 32, gunY + 58, 64, 32);
+            doomCtx.fillStyle = '#d97706'; // кожа пальцев
+            doomCtx.fillRect(gunX - 25, gunY + 54, 50, 8);
 
             doomCtx.restore();
         }
 
-        // Выстрел из дробовика
         function triggerDoomShotgun() {
             if (player.isDead || player.ammo <= 0 || player.shotgunAnim > 0) return;
 
-            player.ammo -= 2; // дуплет
+            player.ammo -= 2;
             if (player.ammo < 0) player.ammo = 0;
             player.shotgunAnim = 1.0;
             updateDoomHUD();
             playDoomShotSound();
 
-            // Проверка попаданий в монстров и бочки
             doomSprites.forEach(sprite => {
                 if (sprite.dead) return;
                 const dx = sprite.x - player.x;
@@ -3877,7 +3884,7 @@ rtr2()  // Копирует расширенные ACL и списки дост�
                 let diff = Math.abs(angle - playerAngle);
                 if (diff > Math.PI) diff = Math.PI * 2 - diff;
 
-                if (diff < 0.32 && dist < 12.0) {
+                if (diff < 0.35 && dist < 12.0) {
                     const dmg = Math.floor(65 / (1 + dist * 0.2));
                     sprite.hp -= dmg;
 
@@ -3894,7 +3901,6 @@ rtr2()  // Копирует расширенные ACL и списки дост�
                         if (sprite.hp <= 0) {
                             sprite.dead = true;
                             playDoomExplosion();
-                            // Взрывной урон окружению
                             doomSprites.forEach(other => {
                                 if (other === sprite || other.dead) return;
                                 const bdx = other.x - sprite.x;
@@ -3908,7 +3914,6 @@ rtr2()  // Копирует расширенные ACL и списки дост�
                                     }
                                 }
                             });
-                            // Взрывной урон игроку если близко
                             const pdist = Math.sqrt(dx * dx + dy * dy);
                             if (pdist < 3.2) {
                                 applyPlayerDamage(Math.floor(35 / pdist));
@@ -3919,19 +3924,18 @@ rtr2()  // Копирует расширенные ACL и списки дост�
             });
         }
 
-        // Анимированный портрет Doomguy в статус-баре (48x48)
+        // Портрет Думгая (48x48)
         function drawDoomFace() {
             if (!doomFaceCtx) return;
             const ctx = doomFaceCtx;
             ctx.clearRect(0, 0, 48, 48);
 
-            // Кожа лица (зависит от здоровья)
             let skinColor = '#eab308';
             if (player.health < 30) skinColor = '#d97706';
             ctx.fillStyle = skinColor;
             ctx.fillRect(8, 8, 32, 34);
 
-            // Военная стрижка (коричневые волосы)
+            // Волосы
             ctx.fillStyle = '#78350f';
             ctx.fillRect(8, 4, 32, 10);
             ctx.fillRect(6, 8, 6, 12);
@@ -3940,7 +3944,6 @@ rtr2()  // Копирует расширенные ACL и списки дост�
             // Брови
             ctx.fillStyle = '#451a03';
             if (player.shotgunAnim > 0.2) {
-                // Нахмуренные злые брови
                 ctx.fillRect(12, 16, 10, 4);
                 ctx.fillRect(26, 16, 10, 4);
             } else {
@@ -3953,8 +3956,7 @@ rtr2()  // Копирует расширенные ACL и списки дост�
             ctx.fillRect(13, 19, 8, 6);
             ctx.fillRect(27, 19, 8, 6);
 
-            // Зрачки (двигаются по таймеру)
-            ctx.fillStyle = '#1e3a8a'; // синие зрачки
+            ctx.fillStyle = '#1e3a8a';
             let pupilX = 16 + player.faceEyeDir * 2;
             ctx.fillRect(pupilX, 20, 3, 4);
             ctx.fillRect(pupilX + 14, 20, 3, 4);
@@ -3965,40 +3967,34 @@ rtr2()  // Копирует расширенные ACL и списки дост�
 
             // Рот
             if (player.isDead) {
-                // Мертв
                 ctx.fillStyle = '#450a0a';
                 ctx.fillRect(16, 32, 16, 6);
-                // Крестики вместо глаз
                 ctx.fillStyle = '#ef4444';
                 ctx.fillRect(13, 19, 8, 6);
                 ctx.fillRect(27, 19, 8, 6);
             } else if (player.shotgunAnim > 0.2) {
-                // Оскал при выстреле (сжатые зубы)
                 ctx.fillStyle = '#fff';
                 ctx.fillRect(16, 32, 16, 6);
                 ctx.fillStyle = '#000';
                 for (let i = 18; i < 32; i += 3) ctx.fillRect(i, 32, 1, 6);
                 ctx.fillRect(16, 35, 16, 1);
             } else if (player.damageFlash > 0.1) {
-                // Гримаса боли
                 ctx.fillStyle = '#7f1d1d';
                 ctx.fillRect(18, 33, 12, 5);
             } else {
-                // Спокойная ухмылка
                 ctx.fillStyle = '#451a03';
                 ctx.fillRect(17, 34, 14, 3);
             }
 
-            // Кровь на лице при низком HP
             if (player.health < 60) {
                 ctx.fillStyle = '#ef4444';
-                ctx.fillRect(10, 14, 3, 8); // кровь на лбу
-                ctx.fillRect(24, 29, 2, 6); // кровь из носа
+                ctx.fillRect(10, 14, 3, 8);
+                ctx.fillRect(24, 29, 2, 6);
             }
             if (player.health < 30) {
                 ctx.fillStyle = '#b91c1c';
-                ctx.fillRect(32, 20, 4, 14); // порез на щеке
-                ctx.fillRect(18, 38, 12, 3); // кровь на подбородке
+                ctx.fillRect(32, 20, 4, 14);
+                ctx.fillRect(18, 38, 12, 3);
             }
         }
 
@@ -4019,9 +4015,7 @@ rtr2()  // Копирует расширенные ACL и списки дост�
             if (killsEl) killsEl.innerText = `${player.kills}/${player.totalKills}`;
         }
 
-        // =================================================================
-        // Web Audio API ЗВУКОВОЙ СИНТЕЗАТОР DOOM
-        // =================================================================
+        // Web Audio API
         function startDoomAudio() {
             try {
                 if (!doomAudioCtx) {
@@ -4030,7 +4024,6 @@ rtr2()  // Копирует расширенные ACL и списки дост�
                 if (doomMusicTimer) clearInterval(doomMusicTimer);
                 doomMusicStep = 0;
 
-                // E1M1 Мелодия: At Doom's Gate (Метал-рифф)
                 const e1m1Bass = [82.4, 82.4, 164.8, 82.4, 82.4, 146.8, 82.4, 82.4, 130.8, 82.4, 82.4, 123.5, 130.8, 138.6];
                 doomMusicTimer = setInterval(() => {
                     if (!doomMusicPlaying || !doomAudioCtx || doomMode !== 'native') return;
@@ -4066,7 +4059,6 @@ rtr2()  // Копирует расширенные ACL и списки дост�
         function playDoomShotSound() {
             try {
                 if (!doomAudioCtx) return;
-                // Взрывной шум дуплета
                 const bufSize = Math.floor(doomAudioCtx.sampleRate * 0.35);
                 const buf = doomAudioCtx.createBuffer(1, bufSize, doomAudioCtx.sampleRate);
                 const data = buf.getChannelData(0);
@@ -4165,8 +4157,8 @@ rtr2()  // Копирует расширенные ACL и списки дост�
                 const osc = doomAudioCtx.createOscillator();
                 const gain = doomAudioCtx.createGain();
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(587, doomAudioCtx.currentTime); // D5
-                osc.frequency.setValueAtTime(880, doomAudioCtx.currentTime + 0.08); // A5
+                osc.frequency.setValueAtTime(587, doomAudioCtx.currentTime);
+                osc.frequency.setValueAtTime(880, doomAudioCtx.currentTime + 0.08);
                 gain.gain.setValueAtTime(0.25, doomAudioCtx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.01, doomAudioCtx.currentTime + 0.2);
                 osc.connect(gain);
