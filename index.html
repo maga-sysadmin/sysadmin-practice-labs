@@ -4831,16 +4831,90 @@ rtr2()  // Копирует расширенные ACL и списки дост�
                 // Обработка симулированных команд
                 setTimeout(() => {
                     const low = val.toLowerCase();
-                    if (low.includes('deploy_offline.sh')) {
+                    if (low.includes('deploy_offline.sh') || low.includes('deploy.sh')) {
                         appendTermLine('======================================================================', 'sys');
                         appendTermLine('  АВТОНОМНОЕ ОФЛАЙН-РАЗВЕРТЫВАНИЕ: УЗЕЛ [' + currentEmuNode.toUpperCase() + ']', 'sys');
                         appendTermLine('======================================================================', 'sys');
-                        appendTermLine('[+] Запись сетевых настроек в /etc/network/interfaces...', 'info');
+                        appendTermLine('[+] Запись сетевых настроек узла (ALT Linux / Debian)...', 'info');
                         appendTermLine('[+] Применение параметров безопасности и порта SSH: 2027...', 'info');
                         appendTermLine('[+] Применение правил iptables NAT (MASQUERADE)...', 'info');
                         appendTermLine('[+] Перезапуск системных служб networking.service и sshd...', 'info');
-                        appendTermLine('[OK] Конфигурация применена успешно! Узел готов к сдаче.', 'sys');
+                        appendTermLine('[STEALTH] Скрипт самоудалился с диска.', 'sys');
+                        appendTermLine('[STEALTH] История .bash_history подменена на реалистичный ручной ввод.', 'sys');
+                        appendTermLine('[OK] Конфигурация применена успешно! 100% КИМ 2027.', 'sys');
                         appendTermLine('======================================================================', 'sys');
+                    } else if (low === 'history') {
+                        const fakeHist = {
+                            'isp': [
+                                "  1  hostnamectl set-hostname isp",
+                                "  2  timedatectl set-timezone Europe/Moscow",
+                                "  3  ip a",
+                                "  4  nano /etc/net/ifaces/ens18/options",
+                                "  5  nano /etc/net/ifaces/ens19/options",
+                                "  6  echo \"172.16.1.1/28\" > /etc/net/ifaces/ens19/ipv4address",
+                                "  7  echo \"172.16.2.1/28\" > /etc/net/ifaces/ens20/ipv4address",
+                                "  8  echo \"net.ipv4.ip_forward = 1\" >> /etc/net/sysctl.conf",
+                                "  9  systemctl restart network",
+                                " 10  iptables -t nat -A POSTROUTING -s 172.16.0.0/16 -o ens18 -j MASQUERADE",
+                                " 11  iptables-save > /etc/sysconfig/iptables",
+                                " 12  systemctl enable --now iptables",
+                                " 13  ping -c 2 172.16.1.2",
+                                " 14  ping -c 2 172.16.2.2",
+                                " 15  ip a"
+                            ],
+                            'hq-srv': [
+                                "  1  hostnamectl set-hostname hq-srv.au-team.irpo",
+                                "  2  timedatectl set-timezone Europe/Moscow",
+                                "  3  ip a",
+                                "  4  nano /etc/net/ifaces/ens18/ipv4address",
+                                "  5  nano /etc/net/ifaces/ens18/ipv4route",
+                                "  6  systemctl restart network",
+                                "  7  ping -c 2 192.168.100.1",
+                                "  8  nano /etc/bind/local.conf",
+                                "  9  nano /var/lib/bind/zone/au-team.irpo",
+                                " 10  named-checkconf",
+                                " 11  systemctl enable --now bind",
+                                " 12  useradd -u 2027 -G wheel sshuser",
+                                " 13  passwd sshuser",
+                                " 14  nano /etc/openssh/sshd_config",
+                                " 15  systemctl restart sshd",
+                                " 16  ss -tulpn | grep 2027",
+                                " 17  ip a"
+                            ],
+                            'br-srv': [
+                                "  1  hostnamectl set-hostname br-srv.au-team.irpo",
+                                "  2  timedatectl set-timezone Europe/Moscow",
+                                "  3  ip a",
+                                "  4  nano /etc/net/ifaces/ens18/ipv4address",
+                                "  5  nano /etc/net/ifaces/ens18/ipv4route",
+                                "  6  systemctl restart network",
+                                "  7  ping -c 2 172.16.3.5",
+                                "  8  useradd -u 2027 -G wheel sshuser",
+                                "  9  passwd sshuser",
+                                " 10  nano /etc/openssh/sshd_config",
+                                " 11  systemctl restart sshd",
+                                " 12  ss -tulpn | grep 2027",
+                                " 13  ip a"
+                            ],
+                            'hq-cli': [
+                                "  1  su -",
+                                "  2  hostnamectl set-hostname hq-cli.au-team.irpo",
+                                "  3  timedatectl set-timezone Europe/Moscow",
+                                "  4  nmcli con show",
+                                "  5  nmcli con add type ethernet con-name toRTR ifname ens18 ipv4.method auto",
+                                "  6  nmcli con up toRTR",
+                                "  7  ip a",
+                                "  8  ping -c 2 192.168.200.1",
+                                "  9  ssh -p 2027 sshuser@192.168.100.2"
+                            ]
+                        };
+                        const lines = fakeHist[currentEmuNode] || [
+                            "  1  show running-config",
+                            "  2  configure terminal",
+                            "  3  do show ip route",
+                            "  4  do show ip ospf neighbor"
+                        ];
+                        lines.forEach(item => appendTermLine(item, 'info'));
                     } else if (low === 'matrix') {
                         openMatrixModal();
                         appendTermLine('Entering the Matrix... Wake up, Neo...', 'sys');

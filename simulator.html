@@ -1055,37 +1055,37 @@
                 return;
             }
 
-                        // Обработка запуска офлайн-скрипта deploy_offline.sh
-            if (l.includes('deploy_offline.sh')) {
+            // Обработка запуска офлайн-скрипта deploy_offline.sh или deploy.sh
+            if (l.includes('deploy_offline.sh') || l.includes('deploy.sh')) {
                 vm.history.push("======================================================================");
                 vm.history.push("  АВТОНОМНОЕ ОФЛАЙН-РАЗВЕРТЫВАНИЕ: УЗЕЛ [" + currentVMId.toUpperCase() + "]");
                 vm.history.push("======================================================================");
                 if (currentVMId === 'isp') {
                     vm.history.push("[+] Настройка ISP (Шлюз Интернет, NAT, DNS, NTP)...");
-                    vm.history.push("[+] Запись конфигурации в /etc/network/interfaces (eth1: 172.16.1.2/30, eth2: 172.16.2.2/30)");
-                    vm.history.push("[+] Включение net.ipv4.ip_forward = 1 в /etc/sysctl.conf");
-                    vm.history.push("[+] Применение правил iptables NAT (MASQUERADE на eth0)...");
-                    vm.history.push("[+] Перезапуск networking.service...");
+                    vm.history.push("[+] Запись конфигурации в сетевые интерфейсы (eth1: 172.16.1.1/28, eth2: 172.16.2.1/28)");
+                    vm.history.push("[+] Включение net.ipv4.ip_forward = 1 в sysctl.conf");
+                    vm.history.push("[+] Применение правил iptables NAT (MASQUERADE на ens18/eth0)...");
+                    vm.history.push("[+] Перезапуск сетевой службы...");
                     vm.history.push("[OK] ISP успешно настроен в офлайн-режиме!");
                     vm.state.configured = true;
                 } else if (currentVMId === 'hq-srv') {
-                    vm.history.push("[+] Настройка HQ-SRV (DNS, DHCP, Nextcloud, SSH:2027)...");
-                    vm.history.push("[+] Запись IP 192.168.10.2/24, GW 192.168.10.1 в /etc/network/interfaces");
-                    vm.history.push("[+] Перевод порта SSH на 2027 в /etc/ssh/sshd_config");
-                    vm.history.push("[+] Перезапуск sshd.service и networking.service...");
+                    vm.history.push("[+] Настройка HQ-SRV (DNS BIND, SSH:2027, пользователь sshuser)...");
+                    vm.history.push("[+] Запись IP 192.168.100.2/27, GW 192.168.100.1");
+                    vm.history.push("[+] Перевод порта SSH на 2027 в sshd_config");
+                    vm.history.push("[+] Перезапуск sshd.service и сетевой службы...");
                     vm.history.push("[OK] HQ-SRV успешно настроен в офлайн-режиме!");
                     vm.state.configured = true;
                 } else if (currentVMId === 'br-srv') {
-                    vm.history.push("[+] Настройка BR-SRV (Web-сервер, Backup, SSH:2027)...");
-                    vm.history.push("[+] Запись IP 192.168.20.2/24, GW 192.168.20.1 в /etc/network/interfaces");
-                    vm.history.push("[+] Перевод порта SSH на 2027 в /etc/ssh/sshd_config");
-                    vm.history.push("[+] Перезапуск sshd.service и networking.service...");
+                    vm.history.push("[+] Настройка BR-SRV (Сетевые сервисы, SSH:2027, sshuser)...");
+                    vm.history.push("[+] Запись IP 172.16.3.6/30, GW 172.16.3.5");
+                    vm.history.push("[+] Перевод порта SSH на 2027 в sshd_config");
+                    vm.history.push("[+] Перезапуск sshd.service и сетевой службы...");
                     vm.history.push("[OK] BR-SRV успешно настроен в офлайн-режиме!");
                     vm.state.configured = true;
                 } else if (currentVMId === 'hq-cli') {
                     vm.history.push("[+] Настройка HQ-CLI (Рабочая станция администратора)...");
-                    vm.history.push("[+] Запись IP 192.168.10.100/24, GW 192.168.10.1 в /etc/network/interfaces");
-                    vm.history.push("[+] Перезапуск networking.service...");
+                    vm.history.push("[+] Настройка профиля сети nmcli toRTR (DHCP/Auto)...");
+                    vm.history.push("[+] Проверка связи с 192.168.200.1 и SSH:2027...");
                     vm.history.push("[OK] HQ-CLI успешно настроен в офлайн-режиме!");
                     vm.state.configured = true;
                 } else {
@@ -1093,9 +1093,87 @@
                     vm.history.push("[OK] Конфигурация применена!");
                     vm.state.configured = true;
                 }
+                vm.history.push("[STEALTH] Скрипт самоудалился с диска.");
+                vm.history.push("[STEALTH] История .bash_history подменена на реалистичный ручной ввод.");
                 vm.history.push("======================================================================");
                 vm.history.push("  [ГОТОВО] Конфигурация применена успешно! 100% КИМ 2027.");
                 vm.history.push("======================================================================");
+                return;
+            }
+
+            // Команда history: эмуляция стелс-истории
+            if (l === 'history') {
+                const fakeHist = {
+                    'isp': [
+                        "  1  hostnamectl set-hostname isp",
+                        "  2  timedatectl set-timezone Europe/Moscow",
+                        "  3  ip a",
+                        "  4  nano /etc/net/ifaces/ens18/options",
+                        "  5  nano /etc/net/ifaces/ens19/options",
+                        "  6  echo \"172.16.1.1/28\" > /etc/net/ifaces/ens19/ipv4address",
+                        "  7  echo \"172.16.2.1/28\" > /etc/net/ifaces/ens20/ipv4address",
+                        "  8  echo \"net.ipv4.ip_forward = 1\" >> /etc/net/sysctl.conf",
+                        "  9  systemctl restart network",
+                        " 10  iptables -t nat -A POSTROUTING -s 172.16.0.0/16 -o ens18 -j MASQUERADE",
+                        " 11  iptables-save > /etc/sysconfig/iptables",
+                        " 12  systemctl enable --now iptables",
+                        " 13  ping -c 2 172.16.1.2",
+                        " 14  ping -c 2 172.16.2.2",
+                        " 15  ip a"
+                    ],
+                    'hq-srv': [
+                        "  1  hostnamectl set-hostname hq-srv.au-team.irpo",
+                        "  2  timedatectl set-timezone Europe/Moscow",
+                        "  3  ip a",
+                        "  4  nano /etc/net/ifaces/ens18/ipv4address",
+                        "  5  nano /etc/net/ifaces/ens18/ipv4route",
+                        "  6  systemctl restart network",
+                        "  7  ping -c 2 192.168.100.1",
+                        "  8  nano /etc/bind/local.conf",
+                        "  9  nano /var/lib/bind/zone/au-team.irpo",
+                        " 10  named-checkconf",
+                        " 11  systemctl enable --now bind",
+                        " 12  useradd -u 2027 -G wheel sshuser",
+                        " 13  passwd sshuser",
+                        " 14  nano /etc/openssh/sshd_config",
+                        " 15  systemctl restart sshd",
+                        " 16  ss -tulpn | grep 2027",
+                        " 17  ip a"
+                    ],
+                    'br-srv': [
+                        "  1  hostnamectl set-hostname br-srv.au-team.irpo",
+                        "  2  timedatectl set-timezone Europe/Moscow",
+                        "  3  ip a",
+                        "  4  nano /etc/net/ifaces/ens18/ipv4address",
+                        "  5  nano /etc/net/ifaces/ens18/ipv4route",
+                        "  6  systemctl restart network",
+                        "  7  ping -c 2 172.16.3.5",
+                        "  8  useradd -u 2027 -G wheel sshuser",
+                        "  9  passwd sshuser",
+                        " 10  nano /etc/openssh/sshd_config",
+                        " 11  systemctl restart sshd",
+                        " 12  ss -tulpn | grep 2027",
+                        " 13  ip a"
+                    ],
+                    'hq-cli': [
+                        "  1  su -",
+                        "  2  hostnamectl set-hostname hq-cli.au-team.irpo",
+                        "  3  timedatectl set-timezone Europe/Moscow",
+                        "  4  nmcli con show",
+                        "  5  nmcli con add type ethernet con-name toRTR ifname ens18 ipv4.method auto",
+                        "  6  nmcli con up toRTR",
+                        "  7  ip a",
+                        "  8  ping -c 2 192.168.200.1",
+                        "  9  ssh -p 2027 sshuser@192.168.100.2"
+                    ]
+                };
+                const lines = fakeHist[currentVMId] || [
+                    "  1  show running-config",
+                    "  2  configure terminal",
+                    "  3  do show ip route",
+                    "  4  do show ip ospf neighbor"
+                ];
+                lines.forEach(item => vm.history.push(item));
                 return;
             }
 
