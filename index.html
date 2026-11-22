@@ -668,6 +668,115 @@
             white-space: nowrap;
         }
 
+        
+        /* Стили для Пасхалки: Сисадминская Змейка */
+        .snake-modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(6px);
+            z-index: 99999;
+            align-items: center;
+            justify-content: center;
+        }
+        .snake-modal-box {
+            background: #0c1017;
+            border: 2px solid #10b981;
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 0 35px rgba(16, 185, 129, 0.4), inset 0 0 15px rgba(16, 185, 129, 0.1);
+            max-width: 540px;
+            width: 95%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            animation: modalPop 0.25s ease;
+        }
+        @keyframes modalPop {
+            from { transform: scale(0.92); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .snake-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #1f293d;
+            padding-bottom: 8px;
+        }
+        .snake-header h3 {
+            color: #34d399;
+            font-family: monospace;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+        }
+        .snake-hud {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            background: #131a26;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #1f293d;
+            font-family: monospace;
+            font-size: 11.5px;
+            text-align: center;
+        }
+        .hud-val {
+            font-weight: 800;
+            color: #38bdf8;
+            font-size: 14px;
+        }
+        .hud-lbl {
+            color: #94a3b8;
+            font-size: 10px;
+            text-transform: uppercase;
+        }
+        .snake-canvas-wrap {
+            position: relative;
+            background: #06090e;
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+        }
+        #snake-canvas {
+            display: block;
+            background: #05070a;
+        }
+        .snake-dpad {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            margin-top: 2px;
+        }
+        .dpad-row {
+            display: flex;
+            gap: 6px;
+        }
+        .dpad-btn {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #f1f5f9;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.1s;
+            user-select: none;
+        }
+        .dpad-btn:active {
+            background: #3b82f6;
+            transform: scale(0.95);
+        }
+
         /* Toast уведомление */
         #toast {
             position: fixed;
@@ -718,6 +827,9 @@
 
     <!-- БЫСТРЫЕ ССЫЛКИ -->
     <div class="quick-links">
+        <a href="javascript:void(0)" onclick="openSnakeModal()" class="btn-link" style="background: linear-gradient(135deg, #065f46 0%, #047857 100%); border-color: #10b981; box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);">
+            🕹️ Sysadmin Snake (Пасхалка)
+        </a>
         <a href="javascript:void(0)" onclick="switchTab('emu', document.getElementById('tab-btn-emu'))" class="btn-link btn-sim">
             🖥️ Интерактивный эмулятор терминала
         </a>
@@ -1978,6 +2090,50 @@ rtr2()  // Копирует расширенные ACL и списки дост�
         </div>
     </div>
 
+    
+    <!-- МОДАЛЬНОЕ ОКНО: ПАСХАЛКА СИСАДМИНСКАЯ ЗМЕЙКА -->
+    <div id="snake-modal" class="snake-modal-backdrop">
+        <div class="snake-modal-box">
+            <div class="snake-header">
+                <h3><span>🐍</span> SYSADMIN PACKET SNAKE v1.0</h3>
+                <button onclick="closeSnakeModal()" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; font-weight: bold;">✕</button>
+            </div>
+            <div class="snake-hud">
+                <div>
+                    <div class="hud-val" id="snake-score">0</div>
+                    <div class="hud-lbl">Пакеты (КИМ)</div>
+                </div>
+                <div>
+                    <div class="hud-val" id="snake-traffic">0 Мб</div>
+                    <div class="hud-lbl">Трафик</div>
+                </div>
+                <div>
+                    <div class="hud-val" id="snake-cable">1.0 м</div>
+                    <div class="hud-lbl">Патч-корд</div>
+                </div>
+                <div>
+                    <div class="hud-val" id="snake-target" style="color: #facc15;">DNS:53</div>
+                    <div class="hud-lbl">Целевой порт</div>
+                </div>
+            </div>
+            <div class="snake-canvas-wrap">
+                <canvas id="snake-canvas" width="460" height="400"></canvas>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; font-family: monospace; font-size: 11px; color: #94a3b8;">
+                <span>Управление: <strong>Стрелки</strong> / <strong>WASD</strong> • Пауза: <strong>P</strong></span>
+                <span>Выход: <strong>ESC</strong></span>
+            </div>
+            <div class="snake-dpad">
+                <button class="dpad-btn" onclick="sendSnakeDir('UP')">▲</button>
+                <div class="dpad-row">
+                    <button class="dpad-btn" onclick="sendSnakeDir('LEFT')">◀</button>
+                    <button class="dpad-btn" onclick="sendSnakeDir('DOWN')">▼</button>
+                    <button class="dpad-btn" onclick="sendSnakeDir('RIGHT')">▶</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- TOAST -->
     <div id="toast">✅ Скопировано в буфер обмена!</div>
 
@@ -2510,6 +2666,276 @@ rtr2()  // Копирует расширенные ACL и списки дост�
             });
         }
 
+        
+        // =================================================================
+        // ПАСХАЛКА: СИСАДМИНСКАЯ ЗМЕЙКА (SYSADMIN PACKET SNAKE)
+        // =================================================================
+        const PACKET_TYPES = [
+            { label: "DNS:53", color: "#38bdf8", name: "BIND9 DNS (au-team.irpo)", pts: 5, traffic: 12 },
+            { label: "SSH:2027", color: "#4ade80", name: "Secured SSH (sshuser)", pts: 10, traffic: 48 },
+            { label: "NTP:123", color: "#c084fc", name: "Chrony Stratum 5 Sync", pts: 8, traffic: 8 },
+            { label: "OSPF:89", color: "#facc15", name: "OSPF Area 0 Hello Packet", pts: 15, traffic: 64 },
+            { label: "AD:445", color: "#fb923c", name: "Samba Active Directory DC", pts: 20, traffic: 128 },
+            { label: "HTTP:80", color: "#f43f5e", name: "Nginx Proxy Stream", pts: 12, traffic: 96 }
+        ];
+
+        let snakeCanvas = null;
+        let snakeCtx = null;
+        let snakeTimer = null;
+        let snakeGridSize = 20;
+        let snakeCols = 23;
+        let snakeRows = 20;
+        let snakeBody = [];
+        let snakeDir = { x: 1, y: 0 };
+        let nextSnakeDir = { x: 1, y: 0 };
+        let snakeFood = null;
+        let snakeScore = 0;
+        let snakeTrafficMB = 0;
+        let snakeGameOver = false;
+        let snakePaused = false;
+        let snakeSpeed = 110;
+
+        function openSnakeModal() {
+            const modal = document.getElementById('snake-modal');
+            if (!modal) return;
+            modal.style.display = 'flex';
+            initSnakeGame();
+        }
+
+        function closeSnakeModal() {
+            const modal = document.getElementById('snake-modal');
+            if (modal) modal.style.display = 'none';
+            if (snakeTimer) clearInterval(snakeTimer);
+            snakeTimer = null;
+        }
+
+        function initSnakeGame() {
+            snakeCanvas = document.getElementById('snake-canvas');
+            if (!snakeCanvas) return;
+            snakeCtx = snakeCanvas.getContext('2d');
+
+            snakeCols = Math.floor(snakeCanvas.width / snakeGridSize);
+            snakeRows = Math.floor(snakeCanvas.height / snakeGridSize);
+
+            snakeBody = [
+                { x: 5, y: 10 },
+                { x: 4, y: 10 },
+                { x: 3, y: 10 }
+            ];
+            snakeDir = { x: 1, y: 0 };
+            nextSnakeDir = { x: 1, y: 0 };
+            snakeScore = 0;
+            snakeTrafficMB = 0;
+            snakeGameOver = false;
+            snakePaused = false;
+            snakeSpeed = 110;
+
+            spawnSnakeFood();
+            updateSnakeHUD();
+
+            if (snakeTimer) clearInterval(snakeTimer);
+            snakeTimer = setInterval(snakeGameTick, snakeSpeed);
+            renderSnakeGame();
+        }
+
+        function spawnSnakeFood() {
+            let valid = false;
+            let fx = 0, fy = 0;
+            while (!valid) {
+                fx = Math.floor(Math.random() * snakeCols);
+                fy = Math.floor(Math.random() * snakeRows);
+                valid = !snakeBody.some(seg => seg.x === fx && seg.y === fy);
+            }
+            const packet = PACKET_TYPES[Math.floor(Math.random() * PACKET_TYPES.length)];
+            snakeFood = { x: fx, y: fy, ...packet };
+            const tgtEl = document.getElementById('snake-target');
+            if (tgtEl) {
+                tgtEl.innerText = packet.label;
+                tgtEl.style.color = packet.color;
+            }
+        }
+
+        function snakeGameTick() {
+            if (snakeGameOver || snakePaused) return;
+
+            snakeDir = nextSnakeDir;
+            const head = { x: snakeBody[0].x + snakeDir.x, y: snakeBody[0].y + snakeDir.y };
+
+            // Столкновение со стеной
+            if (head.x < 0 || head.x >= snakeCols || head.y < 0 || head.y >= snakeRows) {
+                triggerSnakeGameOver("🚨 PACKET LOSS 100%: Обрыв патч-корда о стену серверной стойки!");
+                return;
+            }
+
+            // Самопересечение
+            if (snakeBody.some(seg => seg.x === head.x && seg.y === head.y)) {
+                triggerSnakeGameOver("🚨 LOOP DETECTED: Петля коммутации (STP Loop)! Кабель запутался.");
+                return;
+            }
+
+            snakeBody.unshift(head);
+
+            // Поедание пакета
+            if (head.x === snakeFood.x && head.y === snakeFood.y) {
+                snakeScore += snakeFood.pts;
+                snakeTrafficMB += snakeFood.traffic;
+                spawnSnakeFood();
+                updateSnakeHUD();
+
+                // Увеличение скорости
+                if (snakeSpeed > 55) {
+                    snakeSpeed -= 2;
+                    clearInterval(snakeTimer);
+                    snakeTimer = setInterval(snakeGameTick, snakeSpeed);
+                }
+            } else {
+                snakeBody.pop();
+            }
+
+            renderSnakeGame();
+        }
+
+        function triggerSnakeGameOver(reason) {
+            snakeGameOver = true;
+            renderSnakeGame(reason);
+        }
+
+        function updateSnakeHUD() {
+            const sc = document.getElementById('snake-score');
+            const tf = document.getElementById('snake-traffic');
+            const cb = document.getElementById('snake-cable');
+            if (sc) sc.innerText = snakeScore;
+            if (tf) tf.innerText = (snakeTrafficMB >= 1024) ? (snakeTrafficMB/1024).toFixed(1) + ' Гб' : snakeTrafficMB + ' Мб';
+            if (cb) cb.innerText = (snakeBody.length * 0.5).toFixed(1) + ' м';
+        }
+
+        function renderSnakeGame(overMsg = null) {
+            if (!snakeCtx) return;
+
+            // Очистка фона (сетка стойки)
+            snakeCtx.fillStyle = '#05070a';
+            snakeCtx.fillRect(0, 0, snakeCanvas.width, snakeCanvas.height);
+
+            // Сетка
+            snakeCtx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+            snakeCtx.lineWidth = 1;
+            for (let x = 0; x < snakeCanvas.width; x += snakeGridSize) {
+                snakeCtx.beginPath();
+                snakeCtx.moveTo(x, 0); snakeCtx.lineTo(x, snakeCanvas.height);
+                snakeCtx.stroke();
+            }
+            for (let y = 0; y < snakeCanvas.height; y += snakeGridSize) {
+                snakeCtx.beginPath();
+                snakeCtx.moveTo(0, y); snakeCtx.lineTo(snakeCanvas.width, y);
+                snakeCtx.stroke();
+            }
+
+            // Отрисовка еды (Сетевой пакет)
+            if (snakeFood) {
+                const fx = snakeFood.x * snakeGridSize;
+                const fy = snakeFood.y * snakeGridSize;
+
+                // Свечение пакета
+                snakeCtx.shadowColor = snakeFood.color;
+                snakeCtx.shadowBlur = 10;
+                snakeCtx.fillStyle = snakeFood.color;
+                snakeCtx.fillRect(fx + 2, fy + 2, snakeGridSize - 4, snakeGridSize - 4);
+                snakeCtx.shadowBlur = 0;
+
+                // Метка пакета
+                snakeCtx.fillStyle = '#000';
+                snakeCtx.font = 'bold 8px monospace';
+                snakeCtx.textAlign = 'center';
+                snakeCtx.textBaseline = 'middle';
+                const shortTxt = snakeFood.label.split(':')[1] || snakeFood.label.slice(0, 3);
+                snakeCtx.fillText(shortTxt, fx + snakeGridSize/2, fy + snakeGridSize/2);
+            }
+
+            // Отрисовка патч-корда (Змейки)
+            snakeBody.forEach((seg, idx) => {
+                const sx = seg.x * snakeGridSize;
+                const sy = seg.y * snakeGridSize;
+
+                if (idx === 0) {
+                    // Коннектор RJ-45 (Голова)
+                    snakeCtx.fillStyle = '#10b981';
+                    snakeCtx.shadowColor = '#10b981';
+                    snakeCtx.shadowBlur = 8;
+                    snakeCtx.fillRect(sx + 1, sy + 1, snakeGridSize - 2, snakeGridSize - 2);
+                    snakeCtx.shadowBlur = 0;
+
+                    // Глазок / Контакты RJ-45
+                    snakeCtx.fillStyle = '#facc15';
+                    snakeCtx.fillRect(sx + 4, sy + 4, 3, 3);
+                    snakeCtx.fillRect(sx + 13, sy + 4, 3, 3);
+                } else {
+                    // Тело патч-корда (Cat 6E UTP кабель)
+                    const grad = snakeCtx.createLinearGradient(sx, sy, sx + snakeGridSize, sy + snakeGridSize);
+                    grad.addColorStop(0, '#059669');
+                    grad.addColorStop(1, '#047857');
+                    snakeCtx.fillStyle = grad;
+                    snakeCtx.fillRect(sx + 2, sy + 2, snakeGridSize - 4, snakeGridSize - 4);
+                }
+            });
+
+            // Экран Game Over
+            if (snakeGameOver) {
+                snakeCtx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+                snakeCtx.fillRect(0, 0, snakeCanvas.width, snakeCanvas.height);
+
+                snakeCtx.fillStyle = '#ef4444';
+                snakeCtx.font = 'bold 18px monospace';
+                snakeCtx.textAlign = 'center';
+                snakeCtx.fillText('🚨 KERNEL PANIC: NETWORK DOWN!', snakeCanvas.width/2, snakeCanvas.height/2 - 35);
+
+                snakeCtx.fillStyle = '#f87171';
+                snakeCtx.font = '12px monospace';
+                snakeCtx.fillText(overMsg || 'Обрыв сетевого соединения', snakeCanvas.width/2, snakeCanvas.height/2 - 10);
+
+                snakeCtx.fillStyle = '#38bdf8';
+                snakeCtx.font = 'bold 14px monospace';
+                snakeCtx.fillText(`Итог КИМ: ${snakeScore} баллов | Трафик: ${snakeTrafficMB} МБ`, snakeCanvas.width/2, snakeCanvas.height/2 + 20);
+
+                snakeCtx.fillStyle = '#94a3b8';
+                snakeCtx.font = '11.5px monospace';
+                snakeCtx.fillText('Нажмите [ПРОБЕЛ] для перезапуска или ESC для выхода', snakeCanvas.width/2, snakeCanvas.height/2 + 48);
+            }
+        }
+
+        function sendSnakeDir(dir) {
+            if (dir === 'UP' && snakeDir.y === 0) nextSnakeDir = { x: 0, y: -1 };
+            if (dir === 'DOWN' && snakeDir.y === 0) nextSnakeDir = { x: 0, y: 1 };
+            if (dir === 'LEFT' && snakeDir.x === 0) nextSnakeDir = { x: -1, y: 0 };
+            if (dir === 'RIGHT' && snakeDir.x === 0) nextSnakeDir = { x: 1, y: 0 };
+        }
+
+        // Клавиатурные события для змейки
+        document.addEventListener('keydown', function(e) {
+            const modal = document.getElementById('snake-modal');
+            if (!modal || modal.style.display !== 'flex') {
+                if (e.key.toLowerCase() === 's' && e.ctrlKey && e.altKey) {
+                    openSnakeModal();
+                }
+                return;
+            }
+
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                e.preventDefault(); sendSnakeDir('UP');
+            } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                e.preventDefault(); sendSnakeDir('DOWN');
+            } else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                e.preventDefault(); sendSnakeDir('LEFT');
+            } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                e.preventDefault(); sendSnakeDir('RIGHT');
+            } else if (e.key === ' ' || e.code === 'Space') {
+                e.preventDefault();
+                if (snakeGameOver) initSnakeGame();
+                else snakePaused = !snakePaused;
+            } else if (e.key === 'Escape') {
+                closeSnakeModal();
+            }
+        });
+
         function handleEmuKey(e) {
             if (e.key === 'Enter') {
                 const input = document.getElementById('emu-term-input');
@@ -2522,7 +2948,10 @@ rtr2()  // Копирует расширенные ACL и списки дост�
                 // Обработка симулированных команд
                 setTimeout(() => {
                     const low = val.toLowerCase();
-                    if (low === 'clear') {
+                    if (low === 'snake') {
+                        openSnakeModal();
+                        appendTermLine('Запуск сисадминской змейки: SYSADMIN PACKET SNAKE v1.0...', 'sys');
+                    } else if (low === 'clear') {
                         clearEmuTerminal();
                     } else if (low.startsWith('ping')) {
                         appendTermLine(`PING ${val.split(' ')[1] || '172.16.1.1'} (56 bytes data):`, 'info');
