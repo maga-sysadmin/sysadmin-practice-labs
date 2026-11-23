@@ -2,7 +2,7 @@
 # =====================================================================
 # Автоматический установщик лабораторных конфигураций (09.02.06)
 # =====================================================================
-BASE_URL="https://maga-sysadmin.github.io/sysadmin-practice-labs/scripts"
+BASE_URL="https://raw.githubusercontent.com/maga-sysadmin/sysadmin-practice-labs/main/scripts"
 
 echo "====================================================================="
 echo "   УЧЕБНО-ПРАКТИЧЕСКИЙ КОМПЛЕКС: 09.02.06 (КИМ 2027)"
@@ -59,7 +59,7 @@ fi
 TARGET="${NODE}_m${MODULE}.sh"
 echo ""
 echo "[i] Загрузка сценария: $BASE_URL/$TARGET..."
-curl -sL "$BASE_URL/$TARGET" | bash
+curl -k -sSL "$BASE_URL/$TARGET" | bash
 
 # =====================================================================
 # СТЕЛС-ЗАЧИСТКА: УДАЛЕНИЕ СЛЕДОВ CURL И ПОДМЕНА ИСТОРИИ
